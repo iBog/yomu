@@ -27,6 +27,28 @@ Tap once over any manga page, in any app, and read it in your language. Nothing 
 
 ---
 
+## What's new
+
+Changes in this fork since it branched from [`artsaraiva/yomu`](https://github.com/artsaraiva/yomu) at [`ba91c31`](https://github.com/artsaraiva/yomu/commit/ba91c31).
+
+**0.3.5**
+
+- **Many-column narration boxes are read.** manga-ocr squeezes every crop to 224 × 224 px, so a caption with a dozen vertical columns came back garbled and was skipped as unsure. A block of four or more vertical columns is now read two columns at a time, right to left. A 13-column box went from 0.74 confidence and garbage to 0.93 and clean text.
+- **Long one-line captions are read.** A single line many times wider than tall, such as white text on a black bar, was squeezed flat the same way. It is now cut between characters into pieces about five characters long. A test caption went from 0.68 to 0.93.
+
+**0.3.1**
+
+- **Choice of bubble detector.** The Detection slot also offers [`ogkalu/comic-text-and-bubble-detector`](https://huggingface.co/ogkalu/comic-text-and-bubble-detector) (RT-DETR-v2 v4-s, int8, 11 MB, Apache-2.0), marked Experimental. It finds text in rectangular captions that the default YOLO26n misses, for example 0.95 against 0.09 on a boxed monologue. YOLO26n stays the default. See [ADR-0020](docs/adr/0020-selectable-text-detector.md).
+- **A new detector takes over at once.** Picking another detector used to need an overlay restart; now the next page uses it.
+
+**0.2.35**
+
+- **Russian target.** Russian joins English, Brazilian Portuguese, Spanish, French and German.
+- **More source scripts.** Chinese and English, Korean, Latin-script and Cyrillic-script pages are read with PP-OCRv5 line recognizers. The OCR model you pick sets the source language, and Japanese keeps manga-ocr.
+- **TranslateGemma 4B** joins the translation catalog as Experimental and Multilingual, translating line by line in its own trained prompt format.
+- **Gemma 4 is labelled Multilingual**, so it can be picked for every target language, Russian included.
+- **Build:** Android Gradle Plugin 9.1, Gradle 9.3.1, built-in Kotlin, Hilt 2.59.2, KSP 2.3.6 and Room 2.8.5.
+
 ## See it in action
 
 <p align="center">
@@ -48,6 +70,7 @@ Tap once over any manga page, in any app, and read it in your language. Nothing 
 
 ## Table of contents
 
+- [What's new](#whats-new)
 - [Features](#features)
 - [How it works](#how-it-works)
 - [Models](#models)
@@ -101,6 +124,7 @@ Yomu downloads every model on first launch. Each download is pinned to an exact 
 | Slot | Model | Licence |
 |---|---|---|
 | Bubble detection | [`Kiuyha/Manga-Bubble-YOLO`](https://huggingface.co/Kiuyha/Manga-Bubble-YOLO) (yolo26n, ONNX) | AGPL-3.0, from its Ultralytics YOLO26 base; see [ADR-0007](docs/adr/0007-bubble-text-detection-approach.md) |
+| Bubble detection (Experimental) | [`ogkalu/comic-text-and-bubble-detector`](https://huggingface.co/ogkalu/comic-text-and-bubble-detector) (RT-DETR-v2 v4-s, int8 ONNX); also finds text in rectangular captions | Apache-2.0; see [ADR-0020](docs/adr/0020-selectable-text-detector.md) |
 | OCR | [`artsaraiva/manga-ocr-2025-onnx-past`](https://huggingface.co/artsaraiva/manga-ocr-2025-onnx-past/tree/151898756903f03a2682fa6be4507dfeff71fb7e) (manga-ocr-2025 with past key values) | Apache-2.0 |
 | OCR (other sources) | [PaddlePaddle PP-OCRv5 mobile recognizers](https://huggingface.co/PaddlePaddle) (Chinese and English, Korean, Latin, Cyrillic; ONNX) | Apache-2.0 |
 | Translation (default) | **Qwen2.5 1.5B Instruct** Q4_K_M | Apache-2.0 |
