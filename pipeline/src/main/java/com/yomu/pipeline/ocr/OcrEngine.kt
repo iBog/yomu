@@ -58,17 +58,17 @@ class OcrEngine(private val onnxRuntime: OnnxRuntime) {
 
     fun isModelLoaded(): Boolean = encoderLoaded && decoderLoaded && vocabLoaded
 
-    /** Reads [region] whole, or a block of many vertical columns a few columns at a time ([verticalColumnGroups]). */
+    /** Reads [region] whole, or in [readingPieces] when it is too far from square for one read. */
     fun extractText(region: Bitmap): OcrResult? {
         if (!isModelLoaded()) return null
-        val groups = verticalColumnGroups(luminanceOf(region), region.width, region.height)
+        val groups = readingPieces(luminanceOf(region), region.width, region.height)
         if (groups.size < 2) return readWhole(region)
         val reads = groups.map { columns ->
             val left = (columns.first - COLUMN_PAD).coerceAtLeast(0)
             val right = (columns.last + COLUMN_PAD + 1).coerceAtMost(region.width)
             readWhole(Bitmap.createBitmap(region, left, 0, right - left, region.height)) ?: return null
         }
-        return joinColumnReads(reads).copy(boundingBox = floatArrayOf(region.width.toFloat(), region.height.toFloat(), 0f, 0f))
+        return joinPieceReads(reads).copy(boundingBox = floatArrayOf(region.width.toFloat(), region.height.toFloat(), 0f, 0f))
     }
 
     private fun readWhole(region: Bitmap): OcrResult? {
