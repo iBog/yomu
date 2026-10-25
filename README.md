@@ -12,9 +12,9 @@ Tap once over any manga page, in any app, and read it in your language. Nothing 
 ![Inference](https://img.shields.io/badge/inference-ONNX%20Runtime%20%C2%B7%20llama.cpp-E4572E)
 ![Privacy](https://img.shields.io/badge/cloud-none-2E2A24)
 
-**[Download the latest APK](https://github.com/artsaraiva/yomu/releases/latest)**
+**[Download the latest APK](https://github.com/iBog/yomu/releases/latest)**
 
-<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.yomu.app%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fartsaraiva%2Fyomu%22%2C%22author%22%3A%22artsaraiva%22%2C%22name%22%3A%22Yomu%22%7D"><img src="docs/images/badge-obtainium.png" alt="Get it on Obtainium" height="48"></a>
+<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.yomu.app%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FiBog%2Fyomu%22%2C%22author%22%3A%22iBog%22%2C%22name%22%3A%22Yomu%22%7D"><img src="docs/images/badge-obtainium.png" alt="Get it on Obtainium" height="48"></a>
 
 </div>
 
@@ -138,9 +138,9 @@ Why these models were picked: [ADR-0010](docs/adr/0010-qwen-default-cat-demoted-
 
 ### Install
 
-Download `yomu-<version>.apk` from the [latest release](https://github.com/artsaraiva/yomu/releases/latest) on your phone and open it. Android asks once to allow installs from your browser or file manager.
+Download `yomu-<version>.apk` from the [latest release](https://github.com/iBog/yomu/releases/latest) on your phone and open it. Android asks once to allow installs from your browser or file manager.
 
-To get updates automatically, install it with [Obtainium](https://github.com/ImranR98/Obtainium) instead: tap the badge above, or add `https://github.com/artsaraiva/yomu` as an app in Obtainium.
+To get updates automatically, install it with [Obtainium](https://github.com/ImranR98/Obtainium) instead: tap the badge above, or add `https://github.com/iBog/yomu` as an app in Obtainium.
 
 ### Build from source
 
@@ -156,7 +156,7 @@ To get updates automatically, install it with [Obtainium](https://github.com/Imr
 #### Build
 
 ```bash
-git clone --recursive https://github.com/artsaraiva/yomu.git
+git clone --recursive https://github.com/iBog/yomu.git
 cd yomu
 
 # Already cloned without --recursive? Fetch llama.cpp:
