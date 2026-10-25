@@ -100,6 +100,11 @@ class OverlayService : Service() {
                 configureReadingModels()
                 scope.launch { translationPipeline.unloadOcr() }
             }
+            // The detector stays loaded across pages, so a new one only takes over once the old one is released.
+            Constants.PREF_DETECTION_MODEL -> {
+                configureReadingModels()
+                scope.launch { translationPipeline.unloadDetection() }
+            }
         }
     }
 
