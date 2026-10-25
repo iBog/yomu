@@ -1,5 +1,7 @@
 # Yomu keeps the incumbent YOLO26n bubble/text detector
 
+> **Revised in part by [ADR-0020](0020-selectable-text-detector.md).** YOLO26n stays the default, and the detection slot also offers ogkalu's RT-DETR text detector as Experimental, because YOLO26n misses text in rectangular captions.
+
 > **AGPL clearance resolved by [ADR-0019](0019-yomu-is-agpl-open-source.md).** Yomu is published under AGPL-3.0, which meets the YOLO26 base's terms. The "Per ADR-0001, Yomu ships closed-source" premise below no longer holds, and neither the Enterprise licence nor a retrained detector is needed for licensing.
 
 Yomu detects bubble and in-panel text with the `Kiuyha/Manga-Bubble-YOLO` **yolo26n** ONNX model already in production — a single-class `Text` detector, run at confidence 0.25 through the existing `nonMaxSuppressDetections` (NMS IoU 0.80). No model is swapped in, no threshold moves, no post-processing is removed. The candidate that could have replaced it — the `small` variant from the same repo — was measured against it on the ADR-0003 containment criterion and lost.
