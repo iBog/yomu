@@ -26,6 +26,7 @@ object Constants {
     const val GEMMA4_E2B_MODEL_ID = "gemma4_e2b_v1"
     const val GEMMA4_E4B_MODEL_ID = "gemma4_e4b_v1"
     const val HY_MT2_18B_MODEL_ID = "hy_mt2_1.8b_v1"
+    const val TRANSLATEGEMMA_4B_MODEL_ID = "translategemma_4b_v1"
     const val TERNARY_BONSAI_4B_MODEL_ID = "ternary_bonsai_4b_v1"
     const val TERNARY_BONSAI_8B_MODEL_ID = "ternary_bonsai_8b_v1"
     const val QWEN35_2B_UNCENSORED_MODEL_ID = "qwen35_2b_uncensored_v1"

@@ -71,6 +71,25 @@ class LlmModelCatalogTest {
     }
 
     @Test
+    fun `TranslateGemma 4B is a per-line experimental entry on its own prompt, with the Gemma notice`() {
+        val option = LlmModelCatalog.fromId(Constants.TRANSLATEGEMMA_4B_MODEL_ID)!!
+
+        assertTrue(option.experimental)
+        assertTrue(option.multilingual)
+        assertFalse(option.idKeyedBatch)
+        assertEquals(TranslationPromptMode.TRANSLATEGEMMA, option.promptMode)
+        assertEquals(Constants.TRANSLATEGEMMA_4B_MODEL, option.ggufFileName)
+        assertEquals(Constants.TRANSLATEGEMMA_4B_SIZE, option.sizeBytes)
+        assertEquals("Gemma Terms of Use", option.licence)
+        assertEquals("Gemma is provided under and subject to the Gemma Terms of Use found at ai.google.dev/gemma/terms", option.credit)
+        assertEquals("", option.systemMessage)
+        // Gemma 3: 34 layers, 4 KV heads, head dim 256.
+        assertEquals(139_264L, option.kvCacheBytesPerToken)
+        assertEquals(GenerationParams(topK = 64, topP = 0.95f), option.generationDefaults)
+        assertEquals(DeliverableSpeed.SLOW, option.speed)
+    }
+
+    @Test
     fun `Ternary-Bonsai 4B and 8B are experimental page-batch entries on PrismML's sampling`() {
         listOf(Constants.TERNARY_BONSAI_4B_MODEL_ID, Constants.TERNARY_BONSAI_8B_MODEL_ID).forEach { id ->
             val option = LlmModelCatalog.fromId(id)!!
@@ -306,7 +325,8 @@ class LlmModelCatalogTest {
     fun `every curated entry carries a redistributable licence`() {
         // ADR-0009/ADR-0014: Yomu hosts every curated model, so a licence it cannot redistribute
         // keeps a model out of the catalog entirely.
-        val redistributable = setOf("MIT", "Apache-2.0")
+        // The Gemma Terms allow redistribution with conditions (§3.1): the notice rides in the entry's credit.
+        val redistributable = setOf("MIT", "Apache-2.0", "Gemma Terms of Use")
         LlmModelCatalog.ALL.forEach {
             assertTrue("${it.displayName}: ${it.licence}", it.licence in redistributable)
         }
@@ -337,7 +357,8 @@ class LlmModelCatalogTest {
             Constants.GEMMA4_E4B_MODEL_ID,
             Constants.GEMMA4_E2B_UNCENSORED_MODEL_ID,
             Constants.GEMMA4_E4B_UNCENSORED_MODEL_ID,
-            Constants.HY_MT2_18B_MODEL_ID
+            Constants.HY_MT2_18B_MODEL_ID,
+            Constants.TRANSLATEGEMMA_4B_MODEL_ID
         )
         assertEquals(multilingual, LlmModelCatalog.ALL.filter { it.multilingual }.map { it.id }.toSet())
     }

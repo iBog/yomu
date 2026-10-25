@@ -155,7 +155,8 @@ object LlmModelCatalog {
      * The curated selectable shortlist. Every entry is redistributable and hosted.
      *
      * Gemma 4 is Apache-2.0 and ungated, so it needs none of that and is curated like any other
-     * entry. What follows is about Gemma 2/3 and TranslateGemma, which stay out:
+     * entry. TranslateGemma 4B is curated too, from an ungated re-host under the Gemma Terms, whose
+     * redistribution conditions it carries in its credit. What follows is about Gemma 2/3, which stay out:
      *
      * Gemma / TranslateGemma were the intended gated-download members, but there is no usable
      * licence-clean gated GGUF for them: the official gated repo ships only a 10.5 GB f32 file, and
@@ -369,6 +370,29 @@ object LlmModelCatalog {
             // both say top_p 0.8; the card wins, because the card is also where the prompt comes from.
             generationDefaults = GenerationParams(temperature = 0.7f, topK = 20, topP = 0.6f, penaltyRepeat = 1.05f),
             experimental = true
+        ),
+        // Google's translation-specialised Gemma 3 4B, as mradermacher's Q4_K_M: Google publishes no
+        // GGUF. Per-line like Hy-MT2: it is trained on one text per turn and its card gives a 2K input
+        // context. The Gemma Terms allow redistribution with conditions (§3.1); the notice they ask
+        // for is the credit. Its template names all six targets among its 55 languages.
+        LlmModelOption(
+            id = Constants.TRANSLATEGEMMA_4B_MODEL_ID,
+            displayName = "TranslateGemma 4B",
+            ggufFileName = Constants.TRANSLATEGEMMA_4B_MODEL,
+            sizeBytes = Constants.TRANSLATEGEMMA_4B_SIZE,
+            licence = "Gemma Terms of Use",
+            multilingual = true,
+            idKeyedBatch = false,
+            promptMode = TranslationPromptMode.TRANSLATEGEMMA,
+            // 34 layers, 4 KV heads, head dim 256 (GGUF header); swa_full keeps every layer's cache.
+            kvCacheBytesPerToken = 34L * 2 * 4 * 256 * 2,
+            // The GGUF header's top-k and top-p, from Google's generation_config; it gives no
+            // temperature, so the shipped floor's stays.
+            generationDefaults = GenerationParams(topK = 64, topP = 0.95f),
+            experimental = true,
+            credit = "Gemma is provided under and subject to the Gemma Terms of Use found at ai.google.dev/gemma/terms",
+            // ADR-0009 measured ~52 s a page; its size alone would read as Medium.
+            speed = DeliverableSpeed.SLOW
         ),
         ternaryBonsai(Constants.TERNARY_BONSAI_4B_MODEL_ID, "Ternary-Bonsai 4B", Constants.TERNARY_BONSAI_4B_MODEL, Constants.TERNARY_BONSAI_4B_SIZE),
         ternaryBonsai(Constants.TERNARY_BONSAI_8B_MODEL_ID, "Ternary-Bonsai 8B", Constants.TERNARY_BONSAI_8B_MODEL, Constants.TERNARY_BONSAI_8B_SIZE)

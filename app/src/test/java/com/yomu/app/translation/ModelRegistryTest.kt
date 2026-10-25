@@ -137,6 +137,20 @@ class ModelRegistryTest {
     }
 
     @Test
+    fun `TranslateGemma 4B downloads the pinned mradermacher Q4_K_M`() {
+        val row = registry.single { it.id == Constants.TRANSLATEGEMMA_4B_MODEL_ID }
+
+        assertEquals(
+            "https://huggingface.co/mradermacher/translategemma-4b-it-GGUF/resolve/" +
+                "d37868f759d2f817a43d28dd80cf9f982ffa62fd/translategemma-4b-it.Q4_K_M.gguf",
+            row.downloadUrl
+        )
+        assertEquals("81200d03e843d2ec1ece6eeafe7d13cb6e5211e1fcd336ade55790b683a08330", row.checksum)
+        assertEquals(2_489_909_760L, row.fileSize)
+        assertEquals(Constants.TRANSLATEGEMMA_4B_MODEL, row.fileName)
+    }
+
+    @Test
     fun `Ternary-Bonsai downloads the group-64 Q2_0 files the pinned llama_cpp loads`() {
         val fourB = registry.single { it.id == Constants.TERNARY_BONSAI_4B_MODEL_ID }
         val eightB = registry.single { it.id == Constants.TERNARY_BONSAI_8B_MODEL_ID }
