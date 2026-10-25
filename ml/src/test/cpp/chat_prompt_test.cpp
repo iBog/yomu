@@ -122,6 +122,18 @@ int main() {
     // the template opens straight on the user turn.
     assert(hy_mt2.find("<｜hy_place▁holder▁no▁3｜>") == std::string::npos);
 
+    // TranslateGemma 4B. Its template (mradermacher pin d37868f, read 2026-10-25) takes only a structured
+    // user turn — source_lang_code, target_lang_code, text — and raises on a plain string, which would
+    // drop the prompt to the CAT format. So it is swapped for Gemma 3's plain turns, and the bridge
+    // writes the instruction that template would have rendered.
+    const std::string translategemma_tmpl = read_template("translategemma-4b-it.jinja");
+    assert(jinja_prompt(translategemma_tmpl, "<bos>", "<eos>", user) == cat_prompt(user));
+    const std::string translategemma = jinja_prompt(chat_template_override(translategemma_tmpl), "<bos>", "<eos>", user);
+    assert(translategemma == "<bos><start_of_turn>user\n" + user + "<end_of_turn>\n<start_of_turn>model\n");
+    // Every other template is kept.
+    assert(chat_template_override(read_template("gemma4.jinja")).empty());
+    assert(chat_template_override(read_template("qwen3.5.jinja")).empty());
+
     // No template, or one that fails at render time, keeps the CAT format.
     assert(format_chat_prompt(nullptr, "", user) == cat_prompt(user));
     assert(format_chat_prompt(nullptr, translator, user) == cat_prompt(user));

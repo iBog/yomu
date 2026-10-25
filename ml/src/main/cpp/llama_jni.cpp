@@ -138,7 +138,7 @@ static common_chat_templates_ptr load_chat_templates() {
         return nullptr;
     }
     try {
-        return common_chat_templates_init(g_model, "");
+        return common_chat_templates_init(g_model, chat_template_override(tmpl));
     } catch (const std::exception &e) {
         LOGW("Model chat template not parseable (%s); using CAT fallback", e.what());
         return nullptr;

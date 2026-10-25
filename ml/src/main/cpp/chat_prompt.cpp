@@ -6,6 +6,14 @@ std::string cat_prompt(const std::string &user_prompt) {
     return "<|user|>" + user_prompt + "</s><|assistant|>";
 }
 
+std::string chat_template_override(const std::string &embedded) {
+    if (embedded.find("source_lang_code") == std::string::npos) return "";
+    return "{{ bos_token }}{%- for message in messages -%}"
+           "{{ '<start_of_turn>' + ('model' if message['role'] == 'assistant' else 'user') + '\\n' }}"
+           "{{ message['content'] | trim }}{{ '<end_of_turn>\\n' }}"
+           "{%- endfor -%}{%- if add_generation_prompt -%}{{ '<start_of_turn>model\\n' }}{%- endif -%}";
+}
+
 std::string format_chat_prompt(const common_chat_templates *templates,
                                const std::string &system_prompt,
                                const std::string &user_prompt) {
