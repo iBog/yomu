@@ -31,6 +31,8 @@ class OcrEngine(private val onnxRuntime: OnnxRuntime) {
         private const val SEP_TOKEN = "[SEP]"
         private const val NORMALIZATION_MEAN = 0.5f
         private const val NORMALIZATION_STD = 0.5f
+        // Margin kept either side of a column group, so its outer strokes are not clipped.
+        private const val COLUMN_PAD = 4
     }
 
     private var encoderLoaded = false
@@ -56,8 +58,20 @@ class OcrEngine(private val onnxRuntime: OnnxRuntime) {
 
     fun isModelLoaded(): Boolean = encoderLoaded && decoderLoaded && vocabLoaded
 
+    /** Reads [region] whole, or a block of many vertical columns a few columns at a time ([verticalColumnGroups]). */
     fun extractText(region: Bitmap): OcrResult? {
         if (!isModelLoaded()) return null
+        val groups = verticalColumnGroups(luminanceOf(region), region.width, region.height)
+        if (groups.size < 2) return readWhole(region)
+        val reads = groups.map { columns ->
+            val left = (columns.first - COLUMN_PAD).coerceAtLeast(0)
+            val right = (columns.last + COLUMN_PAD + 1).coerceAtMost(region.width)
+            readWhole(Bitmap.createBitmap(region, left, 0, right - left, region.height)) ?: return null
+        }
+        return joinColumnReads(reads).copy(boundingBox = floatArrayOf(region.width.toFloat(), region.height.toFloat(), 0f, 0f))
+    }
+
+    private fun readWhole(region: Bitmap): OcrResult? {
         val encoderPath = encoderPath ?: return null
         val decoderPath = decoderPath ?: return null
         val vocab = vocab ?: return null
