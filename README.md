@@ -2,6 +2,8 @@
 
 # 読む Yomu
 
+**English** · [Русский](README.ru.md)
+
 **Read any manga. Offline. In one tap.**
 
 On-device manga and comics translation for Android, from Japanese, Chinese, Korean, Latin-script or Cyrillic-script pages into English, Brazilian Portuguese, Spanish, French, German or Russian.
