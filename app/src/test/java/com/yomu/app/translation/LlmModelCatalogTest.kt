@@ -320,7 +320,7 @@ class LlmModelCatalogTest {
     }
 
     @Test
-    fun `only the entries whose maker names all five target languages are Multilingual`() {
+    fun `only the entries whose maker names every target language is Multilingual`() {
         val multilingual = setOf(
             Constants.QWEN25_15B_MODEL_ID,
             Constants.QWEN35_08B_MODEL_ID,

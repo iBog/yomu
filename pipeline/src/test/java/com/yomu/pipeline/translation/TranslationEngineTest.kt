@@ -340,6 +340,12 @@ class TranslationEngineTest {
     }
 
     @Test
+    fun deadTranslationReason_acceptsCyrillicTranslation() {
+        assertNull(deadTranslationReason("Привет, как дела?"))
+        assertFalse("Ёлка — это ёлка.".hasJapaneseScript())
+    }
+
+    @Test
     fun hasJapaneseScript_rejectsReaderInterfaceTextAndBarePunctuation() {
         listOf("Sep15.2.50AN", "oloEdit", "00:37", "OK!", "!?", "……", "ー", "・・・").forEach { text ->
             assertFalse(text, text.hasJapaneseScript())

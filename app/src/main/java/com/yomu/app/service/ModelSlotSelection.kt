@@ -257,10 +257,16 @@ class ModelSlotSelection @Inject constructor(
     }
 
     companion object {
+        private const val PPOCR_LICENCE = "Apache-2.0 (PP-OCRv5)"
+
         // ADR-0007: the detector's card says Apache-2.0, but it is a fine-tune of AGPL-3.0 Ultralytics YOLO26.
         private val READING_LICENCES = mapOf(
             Constants.BUBBLE_DETECTION_MODEL_ID to "AGPL-3.0 (YOLO26)",
-            Constants.MANGA_OCR_MODEL_ID to "Apache-2.0 (manga-ocr)"
+            Constants.MANGA_OCR_MODEL_ID to "Apache-2.0 (manga-ocr)",
+            Constants.PPOCR_CHINESE_MODEL_ID to PPOCR_LICENCE,
+            Constants.PPOCR_KOREAN_MODEL_ID to PPOCR_LICENCE,
+            Constants.PPOCR_LATIN_MODEL_ID to PPOCR_LICENCE,
+            Constants.PPOCR_CYRILLIC_MODEL_ID to PPOCR_LICENCE
         )
 
         const val NO_MULTILINGUAL_FIT = "No Multilingual model fits this device"

@@ -8,10 +8,12 @@ data class OcrResult(
     val text: String,
     /** The decoder's mean probability for the tokens it chose, the stop token included. */
     val confidence: Float,
-    val boundingBox: FloatArray
+    val boundingBox: FloatArray,
+    /** The reader's own floor: each OCR model scores its reads on its own scale. */
+    val minConfidence: Float = OcrEngine.MIN_CONFIDENCE
 ) {
     /** A read this unsure is likely garbled, art or a text-free balloon, and is not worth translating (#366). */
-    val unsure: Boolean get() = confidence < OcrEngine.MIN_CONFIDENCE
+    val unsure: Boolean get() = confidence < minConfidence
 }
 
 class OcrEngine(private val onnxRuntime: OnnxRuntime) {

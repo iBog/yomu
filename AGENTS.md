@@ -95,7 +95,7 @@ Code and test-quality rules live in `CODING_STANDARDS.md`; review checks every d
 
 - **Stack:** Kotlin, Jetpack Compose, Hilt, Room, ONNX Runtime, llama.cpp
 - **Architecture:** Main app + foreground overlay service
-- **Scope:** Japanese → English, Brazilian Portuguese, Spanish, French and German; single-page, Android, local-only, system-wide overlay
+- **Scope:** Japanese, Chinese, Korean, Latin-script and Cyrillic-script sources → English, Brazilian Portuguese, Spanish, French, German and Russian; single-page, Android, local-only, system-wide overlay
 ### When stuck
 
 1. Read the relevant spec or plan doc first.

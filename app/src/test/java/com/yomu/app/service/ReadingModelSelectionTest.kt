@@ -3,6 +3,7 @@ package com.yomu.app.service
 import com.yomu.app.db.entities.ModelType
 import com.yomu.app.translation.MapSharedPreferences
 import com.yomu.core.Constants
+import com.yomu.core.SourceLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -56,5 +57,29 @@ class ReadingModelSelectionTest {
         prefs.values[Constants.PREF_DETECTION_MODEL] = 42
 
         assertEquals(Constants.BUBBLE_DETECTION_MODEL_ID, selection.selected(ModelType.DETECTION).id)
+    }
+
+    @Test
+    fun `the selected OCR model fixes the language a page is read in`() {
+        assertEquals(SourceLanguage.JAPANESE, selection.source())
+
+        selection.select(ModelManager.REGISTRY.single { it.id == Constants.PPOCR_CYRILLIC_MODEL_ID })
+
+        assertEquals(SourceLanguage.CYRILLIC_SCRIPT, selection.source())
+    }
+
+    @Test
+    fun `every OCR model in the registry reads a known source`() {
+        val sources = ModelManager.REGISTRY.filter { it.type == ModelType.OCR }.map { ReadingModelSelection.sourceOf(it.id) }
+
+        assertEquals(SourceLanguage.entries.toSet(), sources.toSet())
+    }
+
+    @Test
+    fun `a line reader downloads its dictionary with it`() {
+        val files = ModelManager.additionalFiles(Constants.PPOCR_LATIN_MODEL_ID)
+
+        assertEquals(listOf("ppocr_v5_latin_rec.yml"), files.map { it.fileName })
+        assertTrue(files.single().url.endsWith("/inference.yml"))
     }
 }

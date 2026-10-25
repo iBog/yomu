@@ -4,7 +4,7 @@
 
 **Read any manga. Offline. In one tap.**
 
-On-device Japanese manga translation for Android, into English, Brazilian Portuguese, Spanish, French or German.
+On-device manga and comics translation for Android, from Japanese, Chinese, Korean, Latin-script or Cyrillic-script pages into English, Brazilian Portuguese, Spanish, French, German or Russian.
 Tap once over any manga page, in any app, and read it in your language. Nothing leaves your phone.
 
 ![Platform](https://img.shields.io/badge/platform-Android%208.0%2B-3DDC84?logo=android&logoColor=white)
@@ -23,7 +23,7 @@ Tap once over any manga page, in any app, and read it in your language. Nothing 
 > - **Android 8.0 or newer on a 64-bit ARM phone.** Tested on an 8 GB phone (Galaxy S23), where the default model peaks at about 2 GB of RAM. Phones with less RAM are untested; [tell us how yours does](https://github.com/artsaraiva/yomu/issues/new?template=bug_report.yml).
 > - **About 1.1 GB of models download on first launch, over Wi-Fi or mobile data.** Keep about 1.5 GB free. After that, Yomu never uses the network.
 > - **A page takes seconds, not milliseconds:** about 15 s on a Galaxy S23 with the default model.
-> - **Japanese source only**, read from the screen. Machine translation from a small on-device model makes mistakes.
+> - **Japanese reads best.** Other sources use a PP-OCRv5 line reader for horizontal text; pick it in the OCR slot. Machine translation from a small on-device model makes mistakes.
 
 ---
 
@@ -62,7 +62,8 @@ Tap once over any manga page, in any app, and read it in your language. Nothing 
 ## Features
 
 - **Works over any app.** A floating button sits on top of your reader, browser or gallery. Yomu captures the screen only when you tap it.
-- **Five target languages.** English, Brazilian Portuguese, Spanish, French or German. Switch from settings or the floating button.
+- **Six target languages.** English, Brazilian Portuguese, Spanish, French, German or Russian. Switch from settings or the floating button.
+- **Five source families.** Japanese (manga-ocr), Chinese and English, Korean, Latin script and Cyrillic script (PP-OCRv5). The OCR model you pick sets the source.
 - **Fully on-device.** Bubble detection, OCR and translation all run locally. No account, no API key, and no usage after the model download.
 - **Page-level context.** Every bubble on the page goes to the LLM in one call, in reading order, so pronouns and tone hold across a conversation.
 - **Manga-aware typesetting.** Font size and line wrapping are fitted to each bubble's bounds.
@@ -87,7 +88,7 @@ flowchart LR
 |---|---|---|
 | Capture | `app/capture` | Grabs a single frame of the screen through `MediaProjection` |
 | Detection | `pipeline/bubble` | Finds speech bubbles and in-panel text with a single-class YOLO detector |
-| OCR | `pipeline/ocr` | Reads each cropped bubble with a manga-specialised encoder–decoder |
+| OCR | `pipeline/ocr` | Reads each cropped bubble: manga-ocr for Japanese, or a PP-OCRv5 recognizer line by line for other sources |
 | Context | `pipeline/context` | Groups bubbles into panels and orders them right-to-left, top-to-bottom |
 | Translation | `ml/` | Sends the whole page to the LLM in the translation slot, using grammar-constrained, id-keyed output where the model supports it |
 | Typesetting | `pipeline/typesetting` | Wraps and sizes the English text to fit each bubble |
@@ -101,6 +102,7 @@ Yomu downloads every model on first launch. Each download is pinned to an exact 
 |---|---|---|
 | Bubble detection | [`Kiuyha/Manga-Bubble-YOLO`](https://huggingface.co/Kiuyha/Manga-Bubble-YOLO) (yolo26n, ONNX) | AGPL-3.0, from its Ultralytics YOLO26 base; see [ADR-0007](docs/adr/0007-bubble-text-detection-approach.md) |
 | OCR | [`artsaraiva/manga-ocr-2025-onnx-past`](https://huggingface.co/artsaraiva/manga-ocr-2025-onnx-past/tree/151898756903f03a2682fa6be4507dfeff71fb7e) (manga-ocr-2025 with past key values) | Apache-2.0 |
+| OCR (other sources) | [PaddlePaddle PP-OCRv5 mobile recognizers](https://huggingface.co/PaddlePaddle) (Chinese and English, Korean, Latin, Cyrillic; ONNX) | Apache-2.0 |
 | Translation (default) | **Qwen2.5 1.5B Instruct** Q4_K_M | Apache-2.0 |
 | Translation | CAT-Translate 1.4B Q4_K_M | MIT |
 | Translation (low storage) | CAT-Translate 0.8B Q4_K_M | MIT |

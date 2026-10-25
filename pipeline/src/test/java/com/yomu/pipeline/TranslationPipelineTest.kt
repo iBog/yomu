@@ -5,10 +5,12 @@ import android.graphics.Color
 import android.graphics.RectF
 import com.yomu.core.GlossaryEntry
 import com.yomu.core.PageTranslation
+import com.yomu.core.SourceLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.pipeline.bubble.Bubble
 import com.yomu.pipeline.bubble.BubbleDetector
 import com.yomu.pipeline.context.ContextAssembler
+import com.yomu.pipeline.ocr.LineOcrEngine
 import com.yomu.pipeline.ocr.OcrEngine
 import com.yomu.pipeline.ocr.OcrResult
 import com.yomu.pipeline.translation.FakeTranslationSlot
@@ -46,6 +48,30 @@ class TranslationPipelineTest {
         ContextAssembler(),
         TranslationEngine { slot },
         Typesetter()
+    )
+
+    private val lineReads = mutableListOf<String>()
+
+    // Reads the same boxes as another script would: the clock and a two-line Latin bubble.
+    private fun lineReader(): LineOcrEngine = Mockito.mock(LineOcrEngine::class.java) { invocation ->
+        when (invocation.method.name) {
+            "isModelLoaded" -> true
+            "extractText" -> {
+                val text = mapOf(50 to "12:00", 80 to "Where are you going?").getValue(invocation.getArgument<Bitmap>(0).width)
+                lineReads += text
+                OcrResult(text, 0.99f, floatArrayOf(), minConfidence = LineOcrEngine.MIN_CONFIDENCE)
+            }
+            else -> Mockito.RETURNS_DEFAULTS.answer(invocation)
+        }
+    }
+
+    private fun linePipeline(vararg boxes: Bubble) = TranslationPipeline(
+        detector(boxes.toList()),
+        ocr(),
+        ContextAssembler(),
+        TranslationEngine { slot },
+        Typesetter(),
+        lineReader()
     )
 
     private fun detector(boxes: List<Bubble>): BubbleDetector = Mockito.mock(BubbleDetector::class.java) { invocation ->
@@ -130,6 +156,27 @@ class TranslationPipelineTest {
 
         assertEquals(TargetLanguage.FRENCH, slot.pages.single().targetLanguage)
         assertEquals(TargetLanguage.FRENCH, result?.translationResult?.targetLanguage)
+    }
+
+    @Test
+    fun `another source language is read by the line reader and keeps reads with letters`() = runTest {
+        val result = linePipeline(clock, speech).processPage(
+            page(),
+            targetLanguage = TargetLanguage.RUSSIAN,
+            sourceLanguage = SourceLanguage.LATIN_SCRIPT
+        )
+
+        assertTrue(reads.isEmpty())
+        assertEquals(listOf("12:00", "Where are you going?"), lineReads)
+        assertEquals(listOf(listOf(2 to "Where are you going?")), slot.pagePairs())
+        assertEquals(SourceLanguage.LATIN_SCRIPT, slot.pages.single().sourceLanguage)
+        assertEquals(mapOf(1 to "12:00"), checkNotNull(result).droppedReads)
+    }
+
+    @Test
+    fun `a line read below its own confidence floor is skipped`() {
+        assertTrue(OcrResult("x", 0.69f, floatArrayOf(), minConfidence = LineOcrEngine.MIN_CONFIDENCE).unsure)
+        assertTrue(!OcrResult("x", 0.71f, floatArrayOf(), minConfidence = LineOcrEngine.MIN_CONFIDENCE).unsure)
     }
 
     @Test

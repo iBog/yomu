@@ -40,7 +40,7 @@ fun SetupScreen(state: HomeUiState, viewModel: HomeViewModel) {
         }
         if (!state.setupStarted || state.setupError) {
             SetupSlot(state, viewModel, ModelType.DETECTION, "Detection", "Finds the speech bubbles on the page.")
-            SetupSlot(state, viewModel, ModelType.OCR, "OCR", "Reads the Japanese inside each bubble.")
+            SetupSlot(state, viewModel, ModelType.OCR, "OCR", "Reads the text inside each bubble. Pick the model for the language your comic is written in.")
             SetupSlot(state, viewModel, ModelType.LLM, "Translation", "The on-device model that translates each bubble.")
         }
         when {

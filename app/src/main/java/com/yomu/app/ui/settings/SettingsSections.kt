@@ -100,7 +100,7 @@ fun PipelineSettings(viewModel: SettingsViewModel, onBack: () -> Unit) {
     SettingsPage(SettingsSection.Pipeline.title, SettingsSection.Pipeline.description, onBack) {
         ModelSlot(state, viewModel, ModelType.DETECTION, "Detection", "Finds the speech bubbles on the page.")
         DetectionThresholdPanel(state.detectionThreshold, viewModel::setDetectionThreshold, viewModel::resetDetectionThreshold)
-        ModelSlot(state, viewModel, ModelType.OCR, "OCR", "Reads the Japanese inside each bubble.")
+        ModelSlot(state, viewModel, ModelType.OCR, "OCR", "Reads the text inside each bubble. Pick the model for the language your comic is written in.")
     }
 }
 

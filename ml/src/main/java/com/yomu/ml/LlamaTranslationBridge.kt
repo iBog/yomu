@@ -5,6 +5,7 @@ import com.yomu.core.ERROR_ENGLISH_ONLY
 import com.yomu.core.ERROR_MODEL_MISSING
 import com.yomu.core.ModelProfile
 import com.yomu.core.PageTranslation
+import com.yomu.core.SourceLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.core.TranslatablePage
 import com.yomu.core.TranslationOutcome
@@ -139,8 +140,8 @@ class LlamaTranslationBridge(
         val bubbles = page.panels.flatten()
         val generated = bubbles.map { bubble ->
             val prompt = when (profile.promptMode) {
-                TranslationPromptMode.MODEL_CARD -> modelCardPrompt(bubble.sourceText)
-                TranslationPromptMode.TRANSLATION_ONLY -> translationOnlyPrompt(bubble.sourceText, page.targetLanguage)
+                TranslationPromptMode.MODEL_CARD -> modelCardPrompt(bubble.sourceText, page.sourceLanguage)
+                TranslationPromptMode.TRANSLATION_ONLY -> translationOnlyPrompt(bubble.sourceText, page)
                 TranslationPromptMode.HY_MT2 -> hyMt2Prompt(bubble.sourceText, page.targetLanguage)
             }
             val output = generate(prompt, profile.generation.maxTokens, TIMEOUT_MS)
@@ -212,12 +213,15 @@ class LlamaTranslationBridge(
         )
     }
 
-    /** CAT-Translate's model-card prompt, byte-identical and English only. */
-    private fun modelCardPrompt(target: String): String =
-        "Translate the following Japanese text into English.\n\n$target"
+    /** CAT-Translate's model-card prompt, byte-identical and English only; another source drops "Japanese". */
+    private fun modelCardPrompt(target: String, source: SourceLanguage): String =
+        "Translate the following ${source.promptPrefix("Japanese ")}text into English.\n\n$target"
 
-    private fun translationOnlyPrompt(target: String, language: TargetLanguage): String = buildString {
-        appendLine("Translate the target Japanese manga text into natural ${language.promptName}. Return only the translation.")
+    private fun translationOnlyPrompt(target: String, page: TranslatablePage): String = buildString {
+        appendLine(
+            "Translate the target ${page.sourceLanguage.promptPrefix()}manga text into natural ${page.targetLanguage.promptName}. " +
+                "Return only the translation."
+        )
         appendLine("No introductions, explanations, labels, or added quotes. Preserve meaning and tone.")
         appendLine("Target text (translate this only):")
         append(target)
@@ -230,7 +234,7 @@ class LlamaTranslationBridge(
 
     private fun buildBatchPrompt(page: TranslatablePage): String = buildString {
         appendLine(
-            "Translate each Japanese line to ${page.targetLanguage.promptName}. Keep the [id] tag before each line. " +
+            "Translate each ${page.sourceLanguage.promptPrefix()}line to ${page.targetLanguage.promptName}. Keep the [id] tag before each line. " +
                 "Panels are separated by ---."
         )
         page.panels.forEachIndexed { index, panel ->
@@ -350,4 +354,11 @@ class LlamaTranslationBridge(
         val errorCode: String? = null,
         val endedByModel: Boolean = false
     )
+}
+
+/** The source named before a noun in a prompt, "Korean ", or nothing for a script family; [japanese] keeps a prompt's own wording. */
+private fun SourceLanguage.promptPrefix(japanese: String = "Japanese "): String = when {
+    this == SourceLanguage.JAPANESE -> japanese
+    promptName == null -> ""
+    else -> "$promptName "
 }

@@ -4,6 +4,7 @@ import com.yomu.core.ERROR_ENGLISH_ONLY
 import com.yomu.core.GenerationParams
 import com.yomu.core.ModelProfile
 import com.yomu.core.RuntimeLimits
+import com.yomu.core.SourceLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.core.TranslatableBubble
 import com.yomu.core.TranslatablePage
@@ -442,6 +443,68 @@ class LlamaTranslationBridgeTest {
     }
 
     @Test
+    fun translatePage_batchReplyInCyrillicKeepsItsText() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("[1] Привет!\n[2] Пока.\n", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, idKeyedBatch = true, multilingual = true))
+
+        val result = slot.translatePage(page(1 to "こんにちは", 2 to "さようなら", language = TargetLanguage.RUSSIAN))
+
+        assertEquals(mapOf(1 to "Привет!", 2 to "Пока."), result.byId)
+        assertTrue(native.prompts.single().startsWith("Translate each Japanese line to Russian."))
+        model.delete()
+    }
+
+    @Test
+    fun translatePage_batchPromptForAScriptFamilyNamesNoSourceLanguage() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("[1] Куда?\n", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, idKeyedBatch = true, multilingual = true))
+
+        slot.translatePage(page(1 to "Where to?", language = TargetLanguage.RUSSIAN, source = SourceLanguage.LATIN_SCRIPT))
+
+        assertEquals(
+            "Translate each line to Russian. Keep the [id] tag before each line. " +
+                "Panels are separated by ---.\n[1] Where to?\n",
+            native.prompts.single()
+        )
+        model.delete()
+    }
+
+    @Test
+    fun translatePage_translationOnlyPromptNamesASingleSourceLanguage() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("Куда ты?", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, TranslationPromptMode.TRANSLATION_ONLY, multilingual = true))
+
+        slot.translatePage(page(1 to "어디 가?", language = TargetLanguage.RUSSIAN, source = SourceLanguage.KOREAN))
+
+        assertEquals(
+            "Translate the target Korean manga text into natural Russian. Return only the translation.\n" +
+                "No introductions, explanations, labels, or added quotes. Preserve meaning and tone.\n" +
+                "Target text (translate this only):\n어디 가?",
+            native.prompts.single()
+        )
+        model.delete()
+    }
+
+    @Test
+    fun translatePage_modelCardPromptNamesAnotherSourceOrNone() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("Hello", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, TranslationPromptMode.MODEL_CARD))
+
+        slot.translatePage(page(1 to "你好", source = SourceLanguage.CHINESE))
+        slot.translatePage(page(1 to "Hola", source = SourceLanguage.LATIN_SCRIPT))
+
+        assertEquals(
+            listOf("Translate the following Chinese text into English.\n\n你好", "Translate the following text into English.\n\nHola"),
+            native.prompts
+        )
+        model.delete()
+    }
+
+    @Test
     fun translatePage_englishBatchPromptIsUnchanged() = runTest {
         val model = File.createTempFile("model", ".gguf")
         val native = FakeLlamaBridge { GenerationResult.Success("[1] Hello\n", 1L) }
@@ -528,6 +591,10 @@ class LlamaTranslationBridgeTest {
         multilingual: Boolean = false
     ): ModelProfile = ModelProfile(model.absolutePath, idKeyedBatch, promptMode, multilingual = multilingual)
 
-    private fun page(vararg bubbles: Pair<Int, String>, language: TargetLanguage = TargetLanguage.ENGLISH): TranslatablePage =
-        TranslatablePage(listOf(bubbles.map { (id, source) -> TranslatableBubble(id, source) }), language)
+    private fun page(
+        vararg bubbles: Pair<Int, String>,
+        language: TargetLanguage = TargetLanguage.ENGLISH,
+        source: SourceLanguage = SourceLanguage.JAPANESE
+    ): TranslatablePage =
+        TranslatablePage(listOf(bubbles.map { (id, text) -> TranslatableBubble(id, text) }), language, source)
 }

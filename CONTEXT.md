@@ -70,8 +70,12 @@ _Avoid_: page cache, translation cache, page memory
 One page's evidence for a bug report: its capture, each bubble's OCR text, the model's raw reply, the model and settings used, and per-stage timings. It leaves the phone only through the share sheet, when the reader sends it.
 _Avoid_: bug bundle, diagnostics dump, crash report
 
+**Source language**:
+The language a page is read in, fixed by the curated OCR model in the OCR slot: manga-ocr reads Japanese, and a PP-OCRv5 recognizer reads Chinese and English, Korean, Latin-script or Cyrillic-script text. A script family is never named in the prompt; the model reads the source as written.
+_Avoid_: input language, original language
+
 **Target language**:
-The language the reader reads translations in. The source is always Japanese; English is the default and the only target an English-only [[deliverable]] can produce.
+The language the reader reads translations in. English is the default and the only target an English-only [[deliverable]] can produce.
 _Avoid_: output language, destination language, locale
 
 **Time to first bubble**:

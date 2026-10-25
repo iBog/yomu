@@ -13,7 +13,8 @@ data class TranslatableBubble(val bubbleId: Int, val sourceText: String)
 
 data class TranslatablePage(
     val panels: List<List<TranslatableBubble>>,
-    val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH
+    val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH,
+    val sourceLanguage: SourceLanguage = SourceLanguage.JAPANESE
 )
 
 /**

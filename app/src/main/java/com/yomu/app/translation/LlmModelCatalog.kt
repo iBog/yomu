@@ -110,6 +110,7 @@ object LlmModelCatalog {
         ggufFileName = Constants.QWEN25_15B_MODEL,
         sizeBytes = Constants.QWEN25_15B_SIZE,
         licence = "Apache-2.0",
+        // The card's language list names all six target languages.
         multilingual = true,
         idKeyedBatch = true,
         promptMode = TranslationPromptMode.TRANSLATION_ONLY,
@@ -196,7 +197,7 @@ object LlmModelCatalog {
             sizeBytes = Constants.QWEN35_08B_SIZE,
             licence = "Apache-2.0",
             // Every Qwen3.5 card gives only "201 languages"; the family's launch post
-            // (qwen.ai/blog?id=qwen3.5, "Multilingual Support") names all five.
+            // (qwen.ai/blog?id=qwen3.5, "Multilingual Support") names all six.
             multilingual = true,
             idKeyedBatch = true,
             promptMode = TranslationPromptMode.TRANSLATION_ONLY,
@@ -260,7 +261,7 @@ object LlmModelCatalog {
             sizeBytes = Constants.QWEN3_4B_2507_SIZE,
             licence = "Apache-2.0",
             // The card names no languages; the Qwen3 technical report (arXiv 2505.09388, §A.1.2 and
-            // its per-language tables) names all five, with Qwen3-4B rows.
+            // its per-language tables) names all six, with Qwen3-4B rows.
             multilingual = true,
             idKeyedBatch = true,
             promptMode = TranslationPromptMode.TRANSLATION_ONLY,
@@ -280,6 +281,8 @@ object LlmModelCatalog {
             ggufFileName = Constants.MINISTRAL3_3B_MODEL,
             sizeBytes = Constants.MINISTRAL3_3B_SIZE,
             licence = "Apache-2.0",
+            // The card names five of the six; Mistral's own language list
+            // (docs.mistral.ai/resources/languages) adds Russian for its language models.
             multilingual = true,
             idKeyedBatch = true,
             promptMode = TranslationPromptMode.TRANSLATION_ONLY,

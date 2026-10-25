@@ -95,6 +95,11 @@ class OverlayService : Service() {
             )
             DetectionThresholdStore.KEY -> translationPipeline.confidenceThreshold = DetectionThresholdStore(preferences).load()
             PageRecallStore.KEY -> pageRecall.enabled = PageRecallStore(preferences).load()
+            // A new OCR model reads another language: the next capture loads it in place of the old one.
+            Constants.PREF_OCR_MODEL -> {
+                configureReadingModels()
+                scope.launch { translationPipeline.unloadOcr() }
+            }
         }
     }
 
@@ -108,6 +113,7 @@ class OverlayService : Service() {
 
     companion object {
         private const val TAG = "OverlayService"
+        private const val MANGA_OCR_FILES = 3
         const val ACTION_SERVICE_STARTED = "com.yomu.app.SERVICE_STARTED"
         const val ACTION_SERVICE_STOPPED = "com.yomu.app.SERVICE_STOPPED"
         const val ACTION_SERVICE_START_FAILED = "com.yomu.app.SERVICE_START_FAILED"
@@ -140,21 +146,27 @@ class OverlayService : Service() {
         statusOverlay = TranslationStatusOverlay(this, windowManager)
         sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
         createNotificationChannel()
-        val detectionFiles = modelManager.modelFiles(readingSelection.selected(ModelType.DETECTION))
-        val ocrFiles = modelManager.modelFiles(readingSelection.selected(ModelType.OCR))
-        readingModelFiles = detectionFiles + ocrFiles
-        translationPipeline.modelPaths = ModelPaths(
-            bubbleDetectionPath = detectionFiles[0].absolutePath,
-            ocrEncoderPath = ocrFiles[0].absolutePath,
-            ocrDecoderPath = ocrFiles[1].absolutePath,
-            ocrVocabPath = ocrFiles[2].absolutePath
-        )
+        configureReadingModels()
         translationPipeline.fontSizeScale = sharedPreferences.getFloat(
             Constants.PREF_FONT_SIZE_SCALE,
             Constants.DEFAULT_FONT_SIZE_SCALE
         )
         translationPipeline.confidenceThreshold = DetectionThresholdStore(sharedPreferences).load()
         pageRecall.enabled = PageRecallStore(sharedPreferences).load()
+    }
+
+    /** manga-ocr is an encoder, decoder and vocabulary; a PP-OCR recognizer is a model and its inference.yml. */
+    private fun configureReadingModels() {
+        val detectionFiles = modelManager.modelFiles(readingSelection.selected(ModelType.DETECTION))
+        val ocrFiles = modelManager.modelFiles(readingSelection.selected(ModelType.OCR))
+        readingModelFiles = detectionFiles + ocrFiles
+        translationPipeline.modelPaths = ModelPaths(
+            bubbleDetectionPath = detectionFiles[0].absolutePath,
+            ocrEncoderPath = ocrFiles[0].absolutePath,
+            ocrDecoderPath = if (ocrFiles.size == MANGA_OCR_FILES) ocrFiles[1].absolutePath else "",
+            ocrVocabPath = ocrFiles.last().absolutePath,
+            ocrSource = readingSelection.source()
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -486,7 +498,8 @@ class OverlayService : Service() {
                 },
                 ignoredRegions = ignored.map { RectF(it.left, it.top, it.right, it.bottom) },
                 targetLanguage = settings.targetLanguage,
-                glossary = settings.glossary
+                glossary = settings.glossary,
+                sourceLanguage = readingSelection.source()
             )
             if (result != null) lastPage = PageRecord(bitmap, result, settings, recalled = false)
             val failure = result?.translationResult?.readerFailure()
