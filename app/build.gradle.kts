@@ -1,6 +1,6 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
 }
@@ -45,13 +45,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions { jvmTarget = "17" }
-
     testOptions { unitTests.isIncludeAndroidResources = true }
 
     buildFeatures { compose = true }
-
-    composeOptions { kotlinCompilerExtensionVersion = "1.5.5" }
 
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
@@ -76,15 +72,15 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
-    implementation("com.google.dagger:hilt-android:2.48")
-    ksp("com.google.dagger:hilt-android-compiler:2.48")
-    kspAndroidTest("com.google.dagger:hilt-android-compiler:2.48")
-    androidTestImplementation("com.google.dagger:hilt-android-testing:2.48")
+    implementation("com.google.dagger:hilt-android:2.59.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.59.2")
+    kspAndroidTest("com.google.dagger:hilt-android-compiler:2.59.2")
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.59.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.8.5")
+    implementation("androidx.room:room-ktx:2.8.5")
+    ksp("androidx.room:room-compiler:2.8.5")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
