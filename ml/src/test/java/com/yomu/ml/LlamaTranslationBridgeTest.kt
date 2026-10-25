@@ -554,6 +554,58 @@ class LlamaTranslationBridgeTest {
     }
 
     @Test
+    fun translatePage_translateGemmaPromptIsTheOneItsTemplateRenders() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("Привет", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, TranslationPromptMode.TRANSLATEGEMMA, multilingual = true))
+
+        slot.translatePage(page(1 to "こんにちは", 2 to "さようなら", language = TargetLanguage.RUSSIAN))
+
+        assertEquals(
+            "You are a professional Japanese (ja) to Russian (ru) translator. Your goal is to accurately convey " +
+                "the meaning and nuances of the original Japanese text while adhering to Russian grammar, " +
+                "vocabulary, and cultural sensitivities.\nProduce only the Russian translation, without any " +
+                "additional explanations or commentary. Please translate the following Japanese text into " +
+                "Russian:\n\n\nこんにちは",
+            native.prompts.first()
+        )
+        assertEquals(2, native.prompts.size)
+        assertEquals(listOf("", ""), native.systemMessages)
+        model.delete()
+    }
+
+    @Test
+    fun translatePage_translateGemmaNamesBrazilianPortugueseAsItsTemplateDoes() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("Olá", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, TranslationPromptMode.TRANSLATEGEMMA, multilingual = true))
+
+        slot.translatePage(page(1 to "안녕", language = TargetLanguage.BRAZILIAN_PORTUGUESE, source = SourceLanguage.KOREAN))
+
+        assertTrue(native.prompts.single().startsWith("You are a professional Korean (ko) to Portuguese (pt-BR) translator."))
+        assertTrue(native.prompts.single().contains("Please translate the following Korean text into Portuguese:\n\n\n안녕"))
+        model.delete()
+    }
+
+    @Test
+    fun translatePage_translateGemmaOnAScriptFamilyNamesOnlyTheTarget() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("Hi", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, TranslationPromptMode.TRANSLATEGEMMA))
+
+        slot.translatePage(page(1 to "Привет", source = SourceLanguage.CYRILLIC_SCRIPT))
+
+        assertEquals(
+            "You are a professional translator into English (en). Your goal is to accurately convey the meaning " +
+                "and nuances of the original text while adhering to English grammar, vocabulary, and cultural " +
+                "sensitivities.\nProduce only the English translation, without any additional explanations or " +
+                "commentary. Please translate the following text into English:\n\n\nПривет",
+            native.prompts.single()
+        )
+        model.delete()
+    }
+
+    @Test
     fun translatePage_modelCardPromptIsUnchanged() = runTest {
         val model = File.createTempFile("model", ".gguf")
         val native = FakeLlamaBridge { GenerationResult.Success("Hello", 1L) }

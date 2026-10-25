@@ -143,6 +143,7 @@ class LlamaTranslationBridge(
                 TranslationPromptMode.MODEL_CARD -> modelCardPrompt(bubble.sourceText, page.sourceLanguage)
                 TranslationPromptMode.TRANSLATION_ONLY -> translationOnlyPrompt(bubble.sourceText, page)
                 TranslationPromptMode.HY_MT2 -> hyMt2Prompt(bubble.sourceText, page.targetLanguage)
+                TranslationPromptMode.TRANSLATEGEMMA -> translateGemmaPrompt(bubble.sourceText, page)
             }
             val output = generate(prompt, profile.generation.maxTokens, TIMEOUT_MS)
             if (output.outcome == TranslationOutcome.SUCCESS) onBubble(bubble.bubbleId, output.text)
@@ -231,6 +232,25 @@ class LlamaTranslationBridge(
     private fun hyMt2Prompt(target: String, language: TargetLanguage): String =
         "Translate the following text into ${language.promptName}. Note that you should only output the " +
             "translated result without any additional explanation:\n\n$target"
+
+    /**
+     * The instruction TranslateGemma's own template renders from a structured turn, with its language
+     * names: it calls pt-BR "Portuguese". A script family has no language code, so that prompt names
+     * only the target, as [translationOnlyPrompt] does.
+     */
+    private fun translateGemmaPrompt(target: String, page: TranslatablePage): String {
+        val language = page.targetLanguage
+        val to = if (language == TargetLanguage.BRAZILIAN_PORTUGUESE) "Portuguese" else language.promptName
+        val from = page.sourceLanguage.promptName
+        val role = if (from == null) "translator into $to (${language.code})"
+        else "$from (${page.sourceLanguage.code}) to $to (${language.code}) translator"
+        val original = if (from == null) "original" else "original $from"
+        val following = if (from == null) "following" else "following $from"
+        return "You are a professional $role. Your goal is to accurately convey the meaning and nuances of the " +
+            "$original text while adhering to $to grammar, vocabulary, and cultural sensitivities.\n" +
+            "Produce only the $to translation, without any additional explanations or commentary. " +
+            "Please translate the $following text into $to:\n\n\n${target.trim()}"
+    }
 
     private fun buildBatchPrompt(page: TranslatablePage): String = buildString {
         appendLine(

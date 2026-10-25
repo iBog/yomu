@@ -7,7 +7,7 @@ sealed class TranslationStatus {
     data class Error(val reason: String) : TranslationStatus()
 }
 
-enum class TranslationPromptMode { MODEL_CARD, TRANSLATION_ONLY, HY_MT2 }
+enum class TranslationPromptMode { MODEL_CARD, TRANSLATION_ONLY, HY_MT2, TRANSLATEGEMMA }
 
 data class TranslatableBubble(val bubbleId: Int, val sourceText: String)
 
