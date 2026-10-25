@@ -73,6 +73,19 @@ class ModelManager @Inject constructor(
                 version = "1.0",
                 isRequired = true
             ),
+            // RT-DETR-v2 trained on manga, webtoons and Western comics: also finds text in rectangular captions.
+            ModelEntity(
+                id = Constants.COMIC_TEXT_DETECTOR_MODEL_ID,
+                name = "Comic Text Detector (RT-DETR v4-s)",
+                type = ModelType.DETECTION,
+                fileName = Constants.COMIC_TEXT_DETECTOR_MODEL,
+                fileSize = 11_120_765L,
+                downloadUrl = "https://huggingface.co/ogkalu/comic-text-and-bubble-detector/resolve/16e8a622f91fabc6b5b65c96d32d1183f8843546/detector-v4-s_int8.onnx",
+                checksum = "5fe9e4f576e49d4e7e8b0e029d6d3cdc252abd4694113e1cae120e62c931ea79",
+                status = ModelStatus.AVAILABLE,
+                version = "1.0",
+                isRequired = false
+            ),
             ModelEntity(
                 id = Constants.MANGA_OCR_MODEL_ID,
                 name = "MangaOCR Japanese (Encoder + Decoder)",

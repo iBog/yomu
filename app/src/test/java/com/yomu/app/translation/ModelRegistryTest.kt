@@ -233,4 +233,18 @@ class ModelRegistryTest {
         val nonHttp = registry.map { it.downloadUrl }.filterNot { it.startsWith("http") }
         assertTrue("non-http urls: $nonHttp", nonHttp.isEmpty())
     }
+
+    @Test
+    fun `the detection slot offers the pinned comic text detector alongside the default`() {
+        val detector = registry.single { it.id == Constants.COMIC_TEXT_DETECTOR_MODEL_ID }
+
+        assertEquals(ModelType.DETECTION, detector.type)
+        assertEquals(
+            "https://huggingface.co/ogkalu/comic-text-and-bubble-detector/resolve/16e8a622f91fabc6b5b65c96d32d1183f8843546/detector-v4-s_int8.onnx",
+            detector.downloadUrl
+        )
+        assertEquals("5fe9e4f576e49d4e7e8b0e029d6d3cdc252abd4694113e1cae120e62c931ea79", detector.checksum)
+        assertEquals(11_120_765L, detector.fileSize)
+        assertTrue(registry.none { it.id != detector.id && it.fileName == detector.fileName })
+    }
 }

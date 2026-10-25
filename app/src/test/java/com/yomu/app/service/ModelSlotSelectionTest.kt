@@ -317,7 +317,9 @@ class ModelSlotSelectionTest {
 
         assertTrue(llm.single { it.id == Constants.QWEN35_2B_MODEL_ID }.experimental)
         assertFalse(llm.single { it.id == LlmModelCatalog.DEFAULT.id }.experimental)
-        assertTrue(ModelType.entries.minus(ModelType.LLM).flatMap { selection.deliverables(it) }.none { it.experimental })
+        assertTrue(selection.deliverables(ModelType.DETECTION).single { it.id == Constants.COMIC_TEXT_DETECTOR_MODEL_ID }.experimental)
+        assertFalse(selection.deliverables(ModelType.DETECTION).single { it.id == Constants.BUBBLE_DETECTION_MODEL_ID }.experimental)
+        assertTrue(selection.deliverables(ModelType.OCR).none { it.experimental })
     }
 
     @Test

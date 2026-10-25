@@ -94,7 +94,8 @@ class ModelSlotSelection @Inject constructor(
                 it.id,
                 it.name,
                 it.fileSize + ModelManager.additionalFiles(it.id).sumOf { file -> file.size },
-                READING_LICENCES.getValue(it.id)
+                READING_LICENCES.getValue(it.id),
+                experimental = it.id in EXPERIMENTAL_READING
             )
         }
     }
@@ -262,12 +263,16 @@ class ModelSlotSelection @Inject constructor(
         // ADR-0007: the detector's card says Apache-2.0, but it is a fine-tune of AGPL-3.0 Ultralytics YOLO26.
         private val READING_LICENCES = mapOf(
             Constants.BUBBLE_DETECTION_MODEL_ID to "AGPL-3.0 (YOLO26)",
+            Constants.COMIC_TEXT_DETECTOR_MODEL_ID to "Apache-2.0 (RT-DETR-v2)",
             Constants.MANGA_OCR_MODEL_ID to "Apache-2.0 (manga-ocr)",
             Constants.PPOCR_CHINESE_MODEL_ID to PPOCR_LICENCE,
             Constants.PPOCR_KOREAN_MODEL_ID to PPOCR_LICENCE,
             Constants.PPOCR_LATIN_MODEL_ID to PPOCR_LICENCE,
             Constants.PPOCR_CYRILLIC_MODEL_ID to PPOCR_LICENCE
         )
+
+        // ADR-0017: chosen on desk research and a desktop run, not yet checked on a phone.
+        private val EXPERIMENTAL_READING = setOf(Constants.COMIC_TEXT_DETECTOR_MODEL_ID)
 
         const val NO_MULTILINGUAL_FIT = "No Multilingual model fits this device"
 
