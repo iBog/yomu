@@ -36,8 +36,9 @@ data class LlmModelOption(
     val licence: String,
     /**
      * The language label (#336): true only when the model card or the maker's own documentation names
-     * every target language Yomu offers (English, Portuguese, Spanish, French, German). A count alone
-     * ("201 languages", "35+ languages") names none of them, so its entry is English only. Checked 2026-10-20.
+     * every target language Yomu offers (English, Portuguese, Spanish, French, German, Russian). A count
+     * alone ("201 languages", "35+ languages") names none of them, so its entry is English only. Checked
+     * 2026-10-20. Gemma 4 is the one exception, made on readers' results rather than a document (see its entry).
      */
     val multilingual: Boolean,
     /** Per-model (#84): a model that can emit one id-keyed reply for the whole page carries true and
@@ -317,7 +318,10 @@ object LlmModelCatalog {
             ggufFileName = Constants.GEMMA4_E2B_MODEL,
             sizeBytes = Constants.GEMMA4_E2B_SIZE,
             licence = "Apache-2.0",
-            multilingual = false,
+            // The exception to the #336 rule: Google gives only a count ("35+ languages out of the box,
+            // 140+ pre-trained", no list, checked 2026-10-25), but readers find its Russian and the
+            // other targets good, so it is labelled Multilingual on results, not on a document.
+            multilingual = true,
             idKeyedBatch = true,
             promptMode = TranslationPromptMode.TRANSLATION_ONLY,
             // KV sharing: only the first 35 − 20 = 15 layers own a KV cache, and of those 12 slide
@@ -333,7 +337,7 @@ object LlmModelCatalog {
             ggufFileName = Constants.GEMMA4_E4B_MODEL,
             sizeBytes = Constants.GEMMA4_E4B_SIZE,
             licence = "Apache-2.0",
-            multilingual = false,
+            multilingual = true,
             idKeyedBatch = true,
             promptMode = TranslationPromptMode.TRANSLATION_ONLY,
             // 42 layers, 18 KV-shared, so 24 own a cache: 20 sliding (2 KV heads × 256) + 4 global (× 512).
