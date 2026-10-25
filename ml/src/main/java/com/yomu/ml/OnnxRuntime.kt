@@ -148,6 +148,7 @@ class OnnxRuntime(private val context: Context) {
     ): List<Detection> {
         val session = loadedModels[modelName] ?: return emptyList()
         val env = ortEnv ?: return emptyList()
+        if (RT_DETR_SIZES_INPUT in session.getInputNames()) return runRtDetrInference(env, session, bitmap, confidenceThreshold)
 
         return try {
             val letterbox = Letterbox(bitmap.width, bitmap.height, YOLO_INPUT_SIZE)
