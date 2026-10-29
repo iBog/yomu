@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.yomu.ml"
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -34,10 +34,12 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.26.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("androidx.core:core-ktx:1.19.1")
+    // 1.29+ probes SME (rdsvl) whenever the CPU lists it; the emulator on an Apple M4 lists SME it cannot
+    // run and dies with SIGILL creating a session. Stay on 1.28 until a newer one is checked on a phone.
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.28.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+    testImplementation("org.mockito:mockito-core:5.24.0")
 }

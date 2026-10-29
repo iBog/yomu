@@ -634,7 +634,7 @@ class ModelManager @Inject constructor(
             return@withContext false
         }
 
-        val body = response.body ?: return@withContext false
+        val body = response.body
 
         body.byteStream().use { input ->
             FileOutputStream(outputFile).use { output ->
