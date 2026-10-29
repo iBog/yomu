@@ -33,6 +33,12 @@ Tap once over any manga page, in any app, and read it in your language. Nothing 
 
 Changes in this fork since it branched from [`artsaraiva/yomu`](https://github.com/artsaraiva/yomu) at [`ba91c31`](https://github.com/artsaraiva/yomu/commit/ba91c31).
 
+**0.3.6**
+
+- **Translate from the notification shade.** Settings → Appearance offers a second way to start a translation: from Yomu's notification instead of the floating button, so nothing sits over the page. The notification has Translate and Stop buttons, and the shade closes before the page is captured.
+- **ONNX Runtime 1.31.1** for detection and OCR, with the newer Arm KleidiAI kernels, including SME2.
+- **Build:** Android Gradle Plugin 9.5, Gradle 9.8.2, Kotlin 2.4.21, Hilt 2.60.1, KSP 2.3.12, Compose BOM 2026.09.00, OkHttp 5 and current AndroidX libraries; compileSdk 37.
+
 **0.3.5**
 
 - **Many-column narration boxes are read.** manga-ocr squeezes every crop to 224 × 224 px, so a caption with a dozen vertical columns came back garbled and was skipped as unsure. A block of four or more vertical columns is now read two columns at a time, right to left. A 13-column box went from 0.74 confidence and garbage to 0.93 and clean text.
