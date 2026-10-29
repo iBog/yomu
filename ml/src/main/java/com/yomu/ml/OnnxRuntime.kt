@@ -2,6 +2,7 @@ package com.yomu.ml
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
 import android.util.Log
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -43,6 +44,8 @@ class OnnxRuntime(private val context: Context) {
             init()
             val env = ortEnv ?: return false
             val opts = OrtSession.SessionOptions()
+            // An emulator on Apple M4 lists SME it can't run; KleidiAI's SME kernels SIGILL there. Phones keep them.
+            if (Build.HARDWARE == "ranchu") opts.addConfigEntry("mlas.disable_kleidiai", "1")
             val session = env.createSession(modelFile.absolutePath, opts)
             loadedModels[modelPath] = session
             true
