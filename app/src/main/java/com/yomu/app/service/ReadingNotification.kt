@@ -5,13 +5,16 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.view.View
+import android.widget.RemoteViews
+import com.yomu.app.R
 import com.yomu.core.Constants
 
 /** What the shade offers while reading; each is an intent action [OverlayService] handles. */
 enum class ShadeAction(val label: String, val intentAction: String) {
     TRANSLATE("Translate", "com.yomu.app.action.TRANSLATE"),
     CANCEL("Cancel", "com.yomu.app.action.CANCEL"),
-    STOP("Stop reading", "com.yomu.app.action.STOP");
+    STOP("Stop", "com.yomu.app.action.STOP");
 
     companion object {
         fun of(intentAction: String?): ShadeAction? = entries.firstOrNull { it.intentAction == intentAction }
@@ -47,12 +50,25 @@ class ReadingNotification(private val context: Context) {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
         content.tap?.let { builder.setContentIntent(pendingIntent(it)) }
-        content.actions.forEach { action ->
-            @Suppress("DEPRECATION")
-            builder.addAction(Notification.Action.Builder(0, action.label, pendingIntent(action)).build())
+        if (content.actions.isNotEmpty()) {
+            builder.setStyle(Notification.DecoratedCustomViewStyle()).setCustomContentView(controls(content))
         }
         return builder.build()
     }
+
+    /** The text and buttons in one row, so they show without expanding the notification. */
+    private fun controls(content: ReadingNotificationContent): RemoteViews =
+        RemoteViews(context.packageName, R.layout.notification_reading).apply {
+            setTextViewText(R.id.reading_text, content.text)
+            listOf(R.id.reading_action_primary, R.id.reading_action_secondary).forEachIndexed { index, id ->
+                val action = content.actions.getOrNull(index)
+                setViewVisibility(id, if (action == null) View.GONE else View.VISIBLE)
+                action?.let {
+                    setTextViewText(id, it.label)
+                    setOnClickPendingIntent(id, pendingIntent(it))
+                }
+            }
+        }
 
     /**
      * A translation goes through [ShadeTriggerActivity]: only an activity start collapses the shade on

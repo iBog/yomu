@@ -221,14 +221,11 @@ private fun TriggerModePanel(selected: TriggerMode, onChange: (TriggerMode) -> U
     PaperSurface(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SettingRow("Translate from", "Where you start translating a page while reading.") {
-                Column(Modifier.selectableGroup()) {
+                Column {
                     options.forEach { (mode, text) ->
-                        Row(
-                            Modifier.fillMaxWidth().selectable(mode == selected, role = Role.RadioButton, onClick = { choose(mode) }),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = mode == selected, onClick = null)
-                            Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = mode == selected, onClick = { choose(mode) })
+                            Column(Modifier.padding(vertical = 8.dp)) {
                                 Text(text.first, style = MaterialTheme.typography.bodyMedium)
                                 Text(text.second, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
