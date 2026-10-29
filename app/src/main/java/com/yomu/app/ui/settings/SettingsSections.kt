@@ -1,5 +1,9 @@
 package com.yomu.app.ui.settings
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -12,6 +16,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.yomu.app.db.entities.ModelType
 import com.yomu.app.detection.DetectionThresholdStore
+import com.yomu.app.service.TriggerMode
 import com.yomu.app.ui.theme.*
 import com.yomu.core.TargetLanguage
 
@@ -172,8 +177,9 @@ fun TypesettingSettings(viewModel: SettingsViewModel, onBack: () -> Unit) {
 }
 
 @Composable
-fun AppearanceSettings(viewModel: SettingsViewModel, onBack: () -> Unit) {
+fun AppearanceSettings(viewModel: SettingsViewModel, triggerMode: TriggerModeViewModel, onBack: () -> Unit) {
     val state by viewModel.uiState.collectAsState()
+    val mode by triggerMode.mode.collectAsState()
     var themeConfirmation by remember { mutableStateOf<String?>(null) }
     SettingsPage(SettingsSection.Appearance.title, SettingsSection.Appearance.description, onBack) {
         PaperSurface(Modifier.fillMaxWidth()) {
@@ -194,5 +200,42 @@ fun AppearanceSettings(viewModel: SettingsViewModel, onBack: () -> Unit) {
             }
         }
         themeConfirmation?.let { PaperSuccess(it) { themeConfirmation = null } }
+        TriggerModePanel(mode, triggerMode::choose)
+    }
+}
+
+@Composable
+private fun TriggerModePanel(selected: TriggerMode, onChange: (TriggerMode) -> Unit) {
+    // The shade trigger lives in the notification, which Android 13+ hides until notifications are allowed.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    val choose = { mode: TriggerMode ->
+        onChange(mode)
+        if (mode == TriggerMode.NOTIFICATION && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+    val options = listOf(
+        TriggerMode.FLOATING_BUTTON to ("Floating button" to "Tap the button over the page; long-press it for quick settings."),
+        TriggerMode.NOTIFICATION to ("Notification shade" to "Pull down the shade and tap Yomu's notification. Nothing stays over the page.")
+    )
+    PaperSurface(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            SettingRow("Translate from", "Where you start translating a page while reading.") {
+                Column(Modifier.selectableGroup()) {
+                    options.forEach { (mode, text) ->
+                        Row(
+                            Modifier.fillMaxWidth().selectable(mode == selected, role = Role.RadioButton, onClick = { choose(mode) }),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = mode == selected, onClick = null)
+                            Column {
+                                Text(text.first, style = MaterialTheme.typography.bodyMedium)
+                                Text(text.second, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

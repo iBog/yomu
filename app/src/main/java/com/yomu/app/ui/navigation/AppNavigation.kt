@@ -153,7 +153,7 @@ fun AppNavigation(
                                 SettingsSection.Pipeline -> PipelineSettings(settings, onBack)
                                 SettingsSection.Typesetting -> TypesettingSettings(settings, onBack)
                                 SettingsSection.Performance -> PerformanceSettings(settings, onBack)
-                                SettingsSection.Appearance -> AppearanceSettings(settings, onBack)
+                                SettingsSection.Appearance -> AppearanceSettings(settings, hiltViewModel(), onBack)
                             }
                         }
                     }

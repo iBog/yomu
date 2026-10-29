@@ -6,6 +6,8 @@ import com.yomu.app.db.entities.TranslationEntity
 import com.yomu.app.service.LanguageSwitch
 import com.yomu.app.service.ModelSlotSelection
 import com.yomu.app.service.SlotDeliverable
+import com.yomu.app.service.TriggerMode
+import com.yomu.app.service.TriggerModeStore
 import com.yomu.app.translation.FitBudget
 import com.yomu.app.translation.LlmModelCatalog
 import com.yomu.core.RuntimeLimits
@@ -13,6 +15,8 @@ import com.yomu.core.TargetLanguage
 
 data class HomeUiState(
     val isServiceRunning: Boolean = false,
+    /** Where reading starts a translation, for the hint under the reading control. */
+    val triggerMode: TriggerMode = TriggerModeStore.DEFAULT,
     val readiness: Readiness = Readiness.NeedsBoth,
     val models: List<ModelEntity> = emptyList(),
     val modelsLoading: Boolean = true,

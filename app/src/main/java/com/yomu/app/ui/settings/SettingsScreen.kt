@@ -21,7 +21,7 @@ enum class SettingsSection(val route: String, val title: String, val description
     Pipeline("settings/pipeline", "Pipeline", "The models that find the speech bubbles and read the Japanese."),
     Typesetting("settings/typesetting", "Typesetting", "How translated text is set inside the bubbles."),
     Performance("settings/performance", "Performance", "What translation costs this phone, and how much the model may use."),
-    Appearance("settings/appearance", "Appearance", "How Yomu looks.")
+    Appearance("settings/appearance", "Appearance", "How Yomu looks and where you start a translation.")
 }
 
 @Composable

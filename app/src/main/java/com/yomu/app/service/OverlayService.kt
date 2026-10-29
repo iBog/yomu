@@ -1,5 +1,6 @@
 package com.yomu.app.service
 
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -86,6 +87,9 @@ class OverlayService : Service() {
     private var floatingButton: FloatingButtonView? = null
     private lateinit var statusOverlay: TranslationStatusOverlay
     private var quickSettingsPopup: QuickSettingsPopup? = null
+    private lateinit var readingNotification: ReadingNotification
+    private val triggerModeStore by lazy { TriggerModeStore(sharedPreferences) }
+    private var translating = false
     private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { preferences, key ->
         when (key) {
             Constants.PREF_THEME -> updateOverlayAppearance()
@@ -95,6 +99,7 @@ class OverlayService : Service() {
             )
             DetectionThresholdStore.KEY -> translationPipeline.confidenceThreshold = DetectionThresholdStore(preferences).load()
             PageRecallStore.KEY -> pageRecall.enabled = PageRecallStore(preferences).load()
+            TriggerModeStore.KEY -> if (screenCaptureManager.isProjectionActive) applyTriggerMode()
             // A new OCR model reads another language: the next capture loads it in place of the old one.
             Constants.PREF_OCR_MODEL -> {
                 configureReadingModels()
@@ -128,6 +133,8 @@ class OverlayService : Service() {
         private const val CHANNEL_NAME = "Yomu Overlay"
         private const val CHANNEL_DESC = "Yomu translation overlay service"
         private const val RELEASE_WAIT_MS = 2_000L
+        /** How long the shade takes to fold away after a tap on the notification, so the capture sees only the page. */
+        private const val SHADE_SETTLE_MS = 600L
 
         fun start(context: Context) {
             val intent = Intent(context, OverlayService::class.java)
@@ -141,6 +148,15 @@ class OverlayService : Service() {
         fun stop(context: Context) {
             context.stopService(Intent(context, OverlayService::class.java))
         }
+
+        /** Whether a reading session is on: the service runs in the foreground only once screen sharing is granted. */
+        @Suppress("DEPRECATION")
+        fun isRunning(context: Context): Boolean {
+            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            return manager.getRunningServices(Int.MAX_VALUE).any {
+                it.service.className == OverlayService::class.java.name && it.foreground
+            }
+        }
     }
 
     override fun onCreate() {
@@ -149,6 +165,7 @@ class OverlayService : Service() {
         floatingButtonOverlay = FloatingButtonOverlay(this, windowManager)
         translationRenderOverlay = TranslationRenderOverlay(this, windowManager)
         statusOverlay = TranslationStatusOverlay(this, windowManager)
+        readingNotification = ReadingNotification(this)
         sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
         createNotificationChannel()
         configureReadingModels()
@@ -175,6 +192,10 @@ class OverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        ShadeAction.of(intent?.action)?.let { action ->
+            onShadeAction(action)
+            return START_NOT_STICKY
+        }
         if (!Settings.canDrawOverlays(this)) {
             notifyStartFailed("Overlay permission missing")
             stopSelf()
@@ -214,12 +235,51 @@ class OverlayService : Service() {
             stopSelf()
         }
 
-        showFloatingButton()
+        applyTriggerMode()
         sendBroadcast(Intent(ACTION_SERVICE_STARTED).setPackage(packageName))
         return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    /** A tap in the shade; with no reading session behind it (a stale notification) there is nothing to act on. */
+    private fun onShadeAction(action: ShadeAction) {
+        if (!screenCaptureManager.isProjectionActive) {
+            stopSelf()
+            return
+        }
+        when (action) {
+            ShadeAction.TRANSLATE -> mainScope.launch {
+                delay(SHADE_SETTLE_MS)
+                startTranslation()
+            }
+            ShadeAction.CANCEL -> cancelTranslation()
+            ShadeAction.STOP -> stopSelf()
+        }
+    }
+
+    /** Shows the floating button, or in [TriggerMode.NOTIFICATION] leaves nothing over the page; the notification follows. */
+    private fun applyTriggerMode() {
+        if (triggerModeStore.load() == TriggerMode.FLOATING_BUTTON) {
+            showFloatingButton()
+        } else {
+            removeQuickSettingsPopup()
+            removeFloatingButton()
+        }
+        refreshNotification()
+    }
+
+    private fun refreshNotification() {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(Constants.OVERLAY_NOTIFICATION_ID, createNotification())
+    }
+
+    /** The floating button and the notification both show whether a page is being translated. */
+    private fun setTranslating(active: Boolean) {
+        translating = active
+        floatingButton?.setState(if (active) FloatingButtonView.State.TRANSLATING else FloatingButtonView.State.IDLE)
+        if (triggerModeStore.load() == TriggerMode.NOTIFICATION) refreshNotification()
+    }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -271,19 +331,8 @@ class OverlayService : Service() {
         }
     }
 
-    private fun createNotification(): Notification {
-        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, Constants.OVERLAY_CHANNEL_ID)
-        } else {
-            Notification.Builder(this)
-        }
-        return builder
-            .setContentTitle("Yomu")
-            .setContentText("Tap the floating button to translate manga")
-            .setSmallIcon(android.R.drawable.ic_menu_edit)
-            .setOngoing(true)
-            .build()
-    }
+    private fun createNotification(): Notification =
+        readingNotification.build(readingNotificationContent(triggerModeStore.load(), translating))
 
     private fun showFloatingButton() {
         val savedX = sharedPreferences.getInt(Constants.PREF_BUTTON_POSITION_X, 0)
@@ -294,7 +343,7 @@ class OverlayService : Service() {
             initialX = savedX,
             initialY = savedY,
             onTap = {
-                if (floatingButton?.currentState == FloatingButtonView.State.TRANSLATING) {
+                if (translating) {
                     cancelTranslation()
                 } else {
                     startTranslation()
@@ -399,7 +448,7 @@ class OverlayService : Service() {
         translationJob?.cancel()
         translationRenderOverlay.remove()
         statusOverlay.remove()
-        floatingButton?.setState(FloatingButtonView.State.IDLE)
+        setTranslating(false)
     }
 
     /**
@@ -411,7 +460,7 @@ class OverlayService : Service() {
         // A cancelled job is no longer active; the new one queues behind it on the pipeline's lock.
         if (translationJob?.isActive == true) return
         removeQuickSettingsPopup()
-        floatingButton?.setState(FloatingButtonView.State.TRANSLATING)
+        setTranslating(true)
 
         translationJob = scope.launch {
             val job = coroutineContext.job
@@ -448,7 +497,7 @@ class OverlayService : Service() {
                 lastPage = PageRecord(bitmap, page, settings, recalled = true)
                 withContext(Dispatchers.Main) {
                     // Idle before the notice: a recall is instant, so a spinning button would read as a stall.
-                    floatingButton?.setState(FloatingButtonView.State.IDLE)
+                    setTranslating(false)
                     val notices = listOfNotNull("Already translated", page.translationResult.untranslatedNotice())
                     showFinishedPage(page, notices.joinToString(" · "))
                 }
@@ -530,7 +579,7 @@ class OverlayService : Service() {
                     delay(1500)
                     statusOverlay.remove()
                 }
-                floatingButton?.setState(FloatingButtonView.State.IDLE)
+                setTranslating(false)
             }
         }
     }
@@ -619,7 +668,7 @@ class OverlayService : Service() {
         withContext(Dispatchers.Main) {
             delay(1500)
             statusOverlay.remove()
-            floatingButton?.setState(FloatingButtonView.State.IDLE)
+            setTranslating(false)
         }
     }
 

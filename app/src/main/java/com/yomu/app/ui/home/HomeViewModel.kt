@@ -1,6 +1,5 @@
 package com.yomu.app.ui.home
 
-import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,6 +16,7 @@ import com.yomu.app.service.LanguageSwitch
 import com.yomu.app.service.ModelManager
 import com.yomu.app.service.ModelSlotSelection
 import com.yomu.app.service.OverlayService
+import com.yomu.app.service.TriggerModeStore
 import com.yomu.core.TargetLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -123,16 +123,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    @Suppress("DEPRECATION")
     fun refreshEnvironment() {
         refreshReadiness()
-        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val running = manager.getRunningServices(Int.MAX_VALUE).any {
-            it.service.className == OverlayService::class.java.name && it.foreground
-        }
         _uiState.update {
             it.withSlots().copy(
-                isServiceRunning = running,
+                isServiceRunning = OverlayService.isRunning(context),
+                triggerMode = TriggerModeStore(sharedPreferences).load(),
                 onMeteredNetwork = modelManager.isOnMeteredNetwork(),
                 fitBudget = slotSelection.fitBudget(it.fitBudget.totalMemBytes)
             )

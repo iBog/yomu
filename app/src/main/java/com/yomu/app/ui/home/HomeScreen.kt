@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import com.yomu.app.service.TriggerMode
 import com.yomu.app.ui.theme.*
 import com.yomu.core.TargetLanguage
 import kotlinx.coroutines.launch
@@ -85,7 +86,10 @@ fun HomeScreen(
             }
             Spacer(Modifier.height(12.dp))
             Text(
-                if (readingStatus == ReadingStatus.On) "Keep reading in your manga app. Tap the floating button to translate a page."
+                if (readingStatus == ReadingStatus.On) when (state.triggerMode) {
+                    TriggerMode.FLOATING_BUTTON -> "Keep reading in your manga app. Tap the floating button to translate a page."
+                    TriggerMode.NOTIFICATION -> "Keep reading in your manga app. Pull down the shade and tap Yomu's notification to translate a page."
+                }
                 else "Turn reading on, then browse manga in the app you already use.",
                 style = MaterialTheme.typography.bodyMedium
             )
