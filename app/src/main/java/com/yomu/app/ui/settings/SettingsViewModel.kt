@@ -101,6 +101,10 @@ class SettingsViewModel @Inject constructor(
     private val detectionThresholdStore = DetectionThresholdStore(sharedPreferences)
     private val pageRecallStore = PageRecallStore(sharedPreferences)
     private val resourceMonitor = ResourceMonitor(context)
+    // Held in a field: SharedPreferences keeps listeners weakly. The overlay's quick settings flip recall while this screen may be open (#401).
+    private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == PageRecallStore.KEY) _uiState.update { it.copy(pageRecall = pageRecallStore.load()) }
+    }
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -122,6 +126,7 @@ class SettingsViewModel @Inject constructor(
         ).withSlots()
         // The warning is now on screen; forget the bad values so it does not return on every visit.
         if (_uiState.value.recoveryWarning != null) modelSelection.clearRecovered()
+        sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
 
         viewModelScope.launch {
             modelManager.refreshModelList()
@@ -138,6 +143,8 @@ class SettingsViewModel @Inject constructor(
             slotSelection.progress.collect { progress -> _uiState.update { it.copy(downloads = progress) } }
         }
     }
+
+    override fun onCleared() = sharedPreferences.unregisterOnSharedPreferenceChangeListener(preferenceListener)
 
     fun setTheme(theme: String) {
         require(theme in listOf("system", "day", "night"))

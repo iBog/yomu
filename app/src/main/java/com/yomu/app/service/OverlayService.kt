@@ -25,6 +25,7 @@ import com.yomu.app.overlay.FloatingButtonOverlay
 import com.yomu.app.overlay.OverlayBounds
 import com.yomu.app.overlay.OverlayBubbleState
 import com.yomu.app.overlay.OverlayLanguageSwitch
+import com.yomu.app.overlay.OverlayRecallSwitch
 import com.yomu.app.overlay.QuickSettingsPopup
 import com.yomu.app.overlay.TranslationRenderOverlay
 import com.yomu.app.overlay.TranslationStatusOverlay
@@ -303,6 +304,9 @@ class OverlayService : Service() {
         )
     }
 
+    // The preference listener turns the recall off, so the quick switch forgets pages exactly as the Settings one does.
+    private val recallSwitch by lazy { OverlayRecallSwitch(this) { PageRecallStore(sharedPreferences).save(it) } }
+
     private fun showQuickSettings() {
         val thresholdStore = DetectionThresholdStore(sharedPreferences)
         val popup = quickSettingsPopup ?: QuickSettingsPopup(
@@ -310,6 +314,7 @@ class OverlayService : Service() {
             windowManager = windowManager,
             modelName = ::translationModelName,
             languageSwitch = languageSwitch,
+            recallSwitch = recallSwitch,
             onFontSizeChanged = { scale ->
                 sharedPreferences.edit().putFloat(Constants.PREF_FONT_SIZE_SCALE, scale).apply()
             },
@@ -321,11 +326,12 @@ class OverlayService : Service() {
             blockTouchesBelow = floatingButtonOverlay::blockTouchesBelow,
             unblockTouchesBelow = floatingButtonOverlay::unblockTouchesBelow
         ).also { quickSettingsPopup = it }
-        // The app can change either value while the service runs, so re-read both on every long-press.
+        // The app can change any of these while the service runs, so re-read them on every long-press.
         popup.updateFontSizeScale(
             sharedPreferences.getFloat(Constants.PREF_FONT_SIZE_SCALE, Constants.DEFAULT_FONT_SIZE_SCALE)
         )
         popup.updateThreshold(thresholdStore.load())
+        recallSwitch.update(PageRecallStore(sharedPreferences).load())
         popup.show(buttonPositionX, buttonPositionY)
     }
 
@@ -576,7 +582,7 @@ class OverlayService : Service() {
         detectionThreshold = translationPipeline.confidenceThreshold,
         fontScale = translationPipeline.fontSizeScale,
         targetLanguage = TargetLanguageStore(sharedPreferences).load(),
-        glossary = NameGlossaryStore(sharedPreferences).load()
+        glossary = NameGlossaryStore(sharedPreferences).entriesInUse()
     )
 
     private suspend fun saveSessionResult(session: TranslationSessionEntity, result: PipelineResult) {

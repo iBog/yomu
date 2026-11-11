@@ -32,7 +32,12 @@ fun TranslationSettings(viewModel: SettingsViewModel, onBack: () -> Unit) {
             onChange = viewModel::setGeneration,
             onReset = viewModel::resetGeneration
         )
-        PageRecallPanel(state.pageRecall, viewModel::setPageRecall)
+        SwitchPanel(
+            "Page recall",
+            "Shows a page already translated while reading at once, instead of translating it again.",
+            state.pageRecall,
+            viewModel::setPageRecall
+        )
     }
 }
 
@@ -73,20 +78,17 @@ private fun TargetLanguagePanel(
     }
 }
 
+/** One on/off setting on its own surface; the whole row toggles it. */
 @Composable
-private fun PageRecallPanel(enabled: Boolean, onChange: (Boolean) -> Unit) {
+internal fun SwitchPanel(title: String, description: String, enabled: Boolean, onChange: (Boolean) -> Unit) {
     PaperSurface(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth().toggleable(enabled, role = Role.Switch, onValueChange = onChange).padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text("Page recall", style = MaterialTheme.typography.titleSmall)
-                Text(
-                    "Shows a page already translated while reading at once, instead of translating it again.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(title, style = MaterialTheme.typography.titleSmall)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.width(16.dp))
             Switch(checked = enabled, onCheckedChange = null)
