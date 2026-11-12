@@ -32,9 +32,14 @@ class TranslationPipelineTest {
     private val sfx = Bubble(3, RectF(220f, 100f, 280f, 300f), 0.9f)
     private val caption = Bubble(4, RectF(300f, 100f, 370f, 300f), 0.9f)
     private val terse = Bubble(5, RectF(10f, 320f, 100f, 390f), 0.9f)
+    // Photos' share icon and label, read with the icon as a kana (#442), and a dialogue line with an acronym.
+    private val toolbarLabel = Bubble(6, RectF(200f, 320f, 240f, 390f), 0.9f)
+    private val acronymLine = Bubble(7, RectF(250f, 320f, 280f, 390f), 0.9f)
 
     // The fake OCR sees only a crop, so each box above has its own width to be told apart by.
-    private val readsByCropWidth = mapOf(50 to "12:00", 80 to "こんにちは", 60 to "!?", 70 to "よくラるって", 90 to "御意")
+    private val readsByCropWidth = mapOf(
+        50 to "12:00", 80 to "こんにちは", 60 to "!?", 70 to "よくラるって", 90 to "御意", 40 to "ぺ。Share", 30 to "GPSのっけて"
+    )
     // Emulator scores from #366: a garbled caption, and a clean two-kanji line.
     private val confidenceByCropWidth = mapOf(70 to 0.738f, 90 to 0.898f)
     private val reads = mutableListOf<String>()
@@ -94,6 +99,13 @@ class TranslationPipelineTest {
         assertEquals(listOf(2), previewed)
         assertEquals(listOf(listOf(2 to "こんにちは")), slot.pagePairs())
         assertEquals(listOf(2), drawn)
+    }
+
+    @Test
+    fun `a read with more Latin letters than kana and kanji never reaches the slot`() = runTest {
+        pipeline(speech, toolbarLabel, acronymLine).processPage(page(), targetLanguage = TargetLanguage.ENGLISH)
+
+        assertEquals(setOf(2 to "こんにちは", 7 to "GPSのっけて"), slot.pagePairs().flatten().toSet())
     }
 
     @Test

@@ -7,7 +7,7 @@ object Constants {
     const val MODELS_DIR = "models"
     const val VISION_MODELS_DIR = "vision"
     const val LLM_MODELS_DIR = "llm"
-    const val BUBBLE_DETECTION_MODEL_ID = "bubble_detection_v1"
+    const val BUBBLE_DETECTION_MODEL_ID = "rtdetr_v4s_v1"
     const val MANGA_OCR_MODEL_ID = "manga_ocr_v1"
     const val CAT_TRANSLATION_MODEL_ID = "cat_translate_0.8b_v1"
     const val CAT_TRANSLATION_14B_MODEL_ID = "cat_translate_1.4b_v1"
@@ -30,7 +30,7 @@ object Constants {
     const val GEMMA4_E2B_UNCENSORED_MODEL_ID = "gemma4_e2b_uncensored_v1"
     const val GEMMA4_E4B_UNCENSORED_MODEL_ID = "gemma4_e4b_uncensored_v1"
 
-    const val BUBBLE_DETECTION_MODEL = "bubble_detection.onnx"
+    const val BUBBLE_DETECTION_MODEL = "rtdetr_v4s_int8.onnx"
     const val OCR_ENCODER_MODEL = "manga_ocr_encoder.onnx"
     const val OCR_DECODER_MODEL = "manga_ocr_decoder.onnx"
     const val OCR_VOCAB_FILE = "vocab.txt"

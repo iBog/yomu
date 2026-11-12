@@ -32,11 +32,12 @@ class BubbleDetector(private val onnxRuntime: OnnxRuntime) {
     private var isLoaded = false
     private var modelPath: String? = null
 
+    /** Loads the model at [modelPath], releasing any other model file loaded before, so detection runs the newest file. */
     fun loadModel(modelPath: String): Boolean {
-        if (!isLoaded) {
-            this.modelPath = modelPath
-            isLoaded = onnxRuntime.loadModel(modelPath)
-        }
+        if (isLoaded && modelPath == this.modelPath) return true
+        release()
+        this.modelPath = modelPath
+        isLoaded = onnxRuntime.loadModel(modelPath)
         return isLoaded
     }
 
@@ -55,7 +56,7 @@ class BubbleDetector(private val onnxRuntime: OnnxRuntime) {
         detections.forEachIndexed { index, detection ->
             Log.d(
                 TAG,
-                "Bubble kept index=$index confidence=${detection.confidence} bbox=${detection.bbox.joinToString(",") }"
+                "Bubble kept index=$index label=${detection.label} confidence=${detection.confidence} bbox=${detection.bbox.joinToString(",") }"
             )
         }
 

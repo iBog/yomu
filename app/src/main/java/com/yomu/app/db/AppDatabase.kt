@@ -37,7 +37,8 @@ abstract class AppDatabase : RoomDatabase() {
          */
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("UPDATE models SET type = 'DETECTION' WHERE id = '${Constants.BUBBLE_DETECTION_MODEL_ID}'")
+                // The detector's id at version 3; refreshModelList drops that row and its file as no longer curated.
+                db.execSQL("UPDATE models SET type = 'DETECTION' WHERE id = 'bubble_detection_v1'")
                 db.execSQL("UPDATE models SET type = 'OCR' WHERE id = '${Constants.MANGA_OCR_MODEL_ID}'")
                 db.execSQL("DELETE FROM models WHERE type NOT IN ('DETECTION', 'OCR', 'LLM')")
             }

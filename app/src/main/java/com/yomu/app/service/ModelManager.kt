@@ -63,12 +63,12 @@ class ModelManager @Inject constructor(
         internal val REGISTRY = listOf(
             ModelEntity(
                 id = Constants.BUBBLE_DETECTION_MODEL_ID,
-                name = "Bubble Detection (YOLO26 Nano Manga)",
+                name = "Bubble Detection (RT-DETR v4-s)",
                 type = ModelType.DETECTION,
                 fileName = Constants.BUBBLE_DETECTION_MODEL,
-                fileSize = 6_070_000L,
-                downloadUrl = "https://huggingface.co/Kiuyha/Manga-Bubble-YOLO/resolve/fb646500455e8a8a3a807fd27b855c8e4fc63766/onnx/yolo26n.onnx",
-                checksum = "b45c2e12cf0c3c1d2abfbbb9123c9f96f040f2ac36a0842382ecd9d859c851c7",
+                fileSize = 11_120_765L,
+                downloadUrl = "https://huggingface.co/ogkalu/comic-text-and-bubble-detector/resolve/16e8a622f91fabc6b5b65c96d32d1183f8843546/detector-v4-s_int8.onnx",
+                checksum = "5fe9e4f576e49d4e7e8b0e029d6d3cdc252abd4694113e1cae120e62c931ea79",
                 status = ModelStatus.AVAILABLE,
                 version = "1.0",
                 isRequired = true

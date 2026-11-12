@@ -257,9 +257,8 @@ class ModelSlotSelection @Inject constructor(
     }
 
     companion object {
-        // ADR-0007: the detector's card says Apache-2.0, but it is a fine-tune of AGPL-3.0 Ultralytics YOLO26.
         private val READING_LICENCES = mapOf(
-            Constants.BUBBLE_DETECTION_MODEL_ID to "AGPL-3.0 (YOLO26)",
+            Constants.BUBBLE_DETECTION_MODEL_ID to "Apache-2.0 (RT-DETR)",
             Constants.MANGA_OCR_MODEL_ID to "Apache-2.0 (manga-ocr)"
         )
 

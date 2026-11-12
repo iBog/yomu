@@ -75,7 +75,7 @@ Tap once over any manga page, in any app, and read it in your language. Nothing 
 ```mermaid
 flowchart LR
     A[Tap floating button] --> B[Screen capture<br/><sub>MediaProjection</sub>]
-    B --> C[Bubble detection<br/><sub>YOLO26n · ONNX</sub>]
+    B --> C[Bubble detection<br/><sub>RT-DETR v4-s · ONNX</sub>]
     C --> D[OCR per bubble<br/><sub>manga-ocr · ONNX</sub>]
     D --> E[Context assembly<br/><sub>panels + reading order</sub>]
     E --> F[Translation<br/><sub>GGUF LLM · llama.cpp</sub>]
@@ -86,7 +86,7 @@ flowchart LR
 | Stage | Where | What it does |
 |---|---|---|
 | Capture | `app/capture` | Grabs a single frame of the screen through `MediaProjection` |
-| Detection | `pipeline/bubble` | Finds speech bubbles and in-panel text with a single-class YOLO detector |
+| Detection | `pipeline/bubble` | Finds text inside and outside speech bubbles with an RT-DETR detector |
 | OCR | `pipeline/ocr` | Reads each cropped bubble with a manga-specialised encoder–decoder |
 | Context | `pipeline/context` | Groups bubbles into panels and orders them right-to-left, top-to-bottom |
 | Translation | `ml/` | Sends the whole page to the LLM in the translation slot, using grammar-constrained, id-keyed output where the model supports it |
@@ -99,7 +99,7 @@ Yomu downloads every model on first launch. Each download is pinned to an exact 
 
 | Slot | Model | Licence |
 |---|---|---|
-| Bubble detection | [`Kiuyha/Manga-Bubble-YOLO`](https://huggingface.co/Kiuyha/Manga-Bubble-YOLO) (yolo26n, ONNX) | AGPL-3.0, from its Ultralytics YOLO26 base; see [ADR-0007](docs/adr/0007-bubble-text-detection-approach.md) |
+| Bubble detection | [`ogkalu/comic-text-and-bubble-detector`](https://huggingface.co/ogkalu/comic-text-and-bubble-detector/tree/16e8a622f91fabc6b5b65c96d32d1183f8843546) (RT-DETR v4-s, int8 ONNX) | Apache-2.0; see [ADR-0020](docs/adr/0020-rtdetr-text-detector.md) |
 | OCR | [`artsaraiva/manga-ocr-2025-onnx-past`](https://huggingface.co/artsaraiva/manga-ocr-2025-onnx-past/tree/151898756903f03a2682fa6be4507dfeff71fb7e) (manga-ocr-2025 with past key values) | Apache-2.0 |
 | Translation (default) | **Qwen2.5 1.5B Instruct** Q4_K_M | Apache-2.0 |
 | Translation | CAT-Translate 1.4B Q4_K_M | MIT |

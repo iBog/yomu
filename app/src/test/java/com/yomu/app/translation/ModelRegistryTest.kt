@@ -36,6 +36,18 @@ class ModelRegistryTest {
     }
 
     @Test
+    fun `the only detection row downloads the pinned ogkalu RT-DETR v4-s`() {
+        val row = registry.single { it.type == ModelType.DETECTION }
+
+        assertEquals(
+            "https://huggingface.co/ogkalu/comic-text-and-bubble-detector/resolve/16e8a622f91fabc6b5b65c96d32d1183f8843546/detector-v4-s_int8.onnx",
+            row.downloadUrl
+        )
+        assertEquals("5fe9e4f576e49d4e7e8b0e029d6d3cdc252abd4694113e1cae120e62c931ea79", row.checksum)
+        assertEquals(11_120_765L, row.fileSize)
+    }
+
+    @Test
     fun `llm rows are exactly the catalog entries`() {
         val llmRowIds = registry.filter { it.type == ModelType.LLM }.map { it.id }.toSet()
         assertEquals(LlmModelCatalog.ALL.map { it.id }.toSet(), llmRowIds)

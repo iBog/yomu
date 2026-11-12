@@ -51,6 +51,17 @@ fun deadTranslationReason(text: String?): String? = when {
 /** Whether the text has any kana or kanji, which reader-app labels, dates and a lone "!?" never do. */
 internal fun String.hasJapaneseScript(): Boolean = CJK.containsMatchIn(this)
 
+private val LATIN = Regex("[A-Za-zＡ-Ｚａ-ｚ]")
+
+/**
+ * Whether an OCR read is Japanese to translate: it has kana or kanji and no more Latin letters than those, so a
+ * reader app's label read with its icon as a stray kana, such as `ぺ。Share`, is left out (#442).
+ */
+internal fun String.readsAsJapanese(): Boolean {
+    val japanese = CJK.findAll(this).count()
+    return japanese > 0 && LATIN.findAll(this).count() <= japanese
+}
+
 private fun String?.usableTranslation(): String? = this?.takeIf { deadTranslationReason(it) == null }
 
 /**

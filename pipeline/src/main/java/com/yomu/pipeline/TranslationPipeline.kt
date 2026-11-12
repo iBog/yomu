@@ -12,7 +12,7 @@ import com.yomu.pipeline.context.ContextAssembler
 import com.yomu.pipeline.ocr.OcrEngine
 import com.yomu.pipeline.ocr.OcrResult
 import com.yomu.pipeline.translation.TranslationEngine
-import com.yomu.pipeline.translation.hasJapaneseScript
+import com.yomu.pipeline.translation.readsAsJapanese
 import com.yomu.pipeline.typesetting.TypesetBubble
 import com.yomu.pipeline.typesetting.Typesetter
 import kotlin.coroutines.coroutineContext
@@ -194,7 +194,7 @@ class TranslationPipeline(
 
                 val result = ocrEngine.extractText(bubbleBitmap)
                 coroutineContext.ensureActive()
-                if (result != null && result.text.hasJapaneseScript()) {
+                if (result != null && result.text.readsAsJapanese()) {
                     reads[bubble.id] = result
                     // A garbled read comes back as confident wrong English, so its bubble keeps its art (#366).
                     if (result.unsure) {

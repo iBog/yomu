@@ -9,6 +9,7 @@ import ai.onnxruntime.OrtSession
 import ai.onnxruntime.TensorInfo
 import java.io.File
 import java.nio.FloatBuffer
+import java.nio.LongBuffer
 
 class OnnxRuntime(private val context: Context) {
 
@@ -17,10 +18,8 @@ class OnnxRuntime(private val context: Context) {
 
     companion object {
         private const val TAG = "OnnxRuntime"
-        private const val YOLO_INPUT_SIZE = 1280
-        private const val YOLO_FIELDS_PER_DETECTION = 6
-        private const val YOLO_EXPECTED_DETECTIONS = 300
-        private const val YOLO_EXPECTED_OUTPUT_SIZE = YOLO_EXPECTED_DETECTIONS * YOLO_FIELDS_PER_DETECTION
+        // The detector was trained on pages stretched to this square, not letterboxed (#437).
+        private const val DETECTOR_INPUT_SIZE = 640
     }
 
     data class Detection(
@@ -141,6 +140,10 @@ class OnnxRuntime(private val context: Context) {
         return tensorInfo.shape
     }
 
+    /**
+     * Detects text on [bitmap] with the ogkalu RT-DETR detector loaded from [modelName]. The page is stretched to the
+     * model's square input and its `[width, height]` passed alongside, so boxes come back in page pixels. Empty on failure.
+     */
     fun runBitmapInference(
         modelName: String,
         bitmap: Bitmap,
@@ -148,60 +151,42 @@ class OnnxRuntime(private val context: Context) {
     ): List<Detection> {
         val session = loadedModels[modelName] ?: return emptyList()
         val env = ortEnv ?: return emptyList()
+        val inputs = mutableMapOf<String, OnnxTensor>()
 
         return try {
-            val letterbox = Letterbox(bitmap.width, bitmap.height, YOLO_INPUT_SIZE)
-            val resized = Bitmap.createScaledBitmap(bitmap, letterbox.scaledWidth, letterbox.scaledHeight, true)
-            val pixels = IntArray(letterbox.inputWidth * letterbox.inputHeight) { Letterbox.PAD_COLOR }
-            resized.getPixels(pixels, 0, letterbox.inputWidth, 0, 0, letterbox.scaledWidth, letterbox.scaledHeight)
-            val floatArray = bitmapPixelsToCHW(pixels, letterbox.inputWidth, letterbox.inputHeight)
-
-            val shape = longArrayOf(1, 3, letterbox.inputHeight.toLong(), letterbox.inputWidth.toLong())
-            val inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(floatArray), shape)
+            val size = DETECTOR_INPUT_SIZE
+            val pixels = IntArray(size * size)
+            Bitmap.createScaledBitmap(bitmap, size, size, true).getPixels(pixels, 0, size, 0, 0, size, size)
+            inputs["images"] = OnnxTensor.createTensor(
+                env, FloatBuffer.wrap(bitmapPixelsToCHW(pixels, size, size)), longArrayOf(1, 3, size.toLong(), size.toLong())
+            )
+            // Width first: [height, width] puts boxes past the page edge (#437).
+            inputs["orig_target_sizes"] = OnnxTensor.createTensor(
+                env, LongBuffer.wrap(longArrayOf(bitmap.width.toLong(), bitmap.height.toLong())), longArrayOf(1, 2)
+            )
+            val result = session.run(inputs)
             try {
-                val inputName = session.getInputNames().first()
-                val result = session.run(mapOf(inputName to inputTensor))
-                try {
-                    val outputName = session.getOutputNames().first()
-                    val output = result.get(outputName).orElse(null) as? OnnxTensor
-
-                    if (output != null) {
-                        val outputArray = readFloatBuffer(output.getFloatBuffer())
-                        if (outputArray.size != YOLO_EXPECTED_OUTPUT_SIZE) {
-                            if (outputArray.size % YOLO_FIELDS_PER_DETECTION != 0) {
-                                Log.e(
-                                    TAG,
-                                    "YOLO output size ${outputArray.size} is invalid; not divisible by $YOLO_FIELDS_PER_DETECTION"
-                                )
-                            } else {
-                                Log.e(
-                                    TAG,
-                                    "YOLO output size ${outputArray.size} does not match expected $YOLO_EXPECTED_OUTPUT_SIZE"
-                                )
-                            }
-                            emptyList()
-                        } else {
-                            val detections = parseYoloDetections(outputArray, YOLO_FIELDS_PER_DETECTION, confidenceThreshold)
-                            if (detections.isEmpty()) {
-                                Log.d(TAG, "YOLO inference produced zero detections above threshold")
-                            }
-                            detections.map { it.copy(bbox = letterbox.toSource(it.bbox)) }
-                        }
-                    } else {
-                        Log.e(TAG, "YOLO output tensor was null for model $modelName")
-                        emptyList()
-                    }
-                } finally {
-                    result.close()
+                val labels = result.tensor("labels")?.getLongBuffer()?.let(::readLongBuffer)
+                val boxes = result.tensor("boxes")?.getFloatBuffer()?.let(::readFloatBuffer)
+                val scores = result.tensor("scores")?.getFloatBuffer()?.let(::readFloatBuffer)
+                if (labels == null || boxes == null || scores == null) {
+                    Log.e(TAG, "Detector outputs missing for model $modelName")
+                    emptyList()
+                } else {
+                    parseRtDetrDetections(labels, boxes, scores, confidenceThreshold)
                 }
             } finally {
-                inputTensor.close()
+                result.close()
             }
         } catch (e: Exception) {
             Log.e(TAG, "runBitmapInference failed for $modelName: ${e.message}", e)
             emptyList()
+        } finally {
+            closeTensors(inputs.values)
         }
     }
+
+    private fun OrtSession.Result.tensor(name: String): OnnxTensor? = get(name).orElse(null) as? OnnxTensor
 
     private fun readOutputs(
         session: OrtSession,
@@ -246,6 +231,14 @@ internal fun readFloatBuffer(buffer: FloatBuffer): FloatArray {
     return output
 }
 
+internal fun readLongBuffer(buffer: LongBuffer): LongArray {
+    val copy = buffer.duplicate()
+    copy.rewind()
+    val output = LongArray(copy.remaining())
+    copy.get(output)
+    return output
+}
+
 internal fun bitmapPixelsToCHW(pixels: IntArray, width: Int, height: Int): FloatArray {
     val planeSize = width * height
     require(pixels.size == planeSize) {
@@ -262,35 +255,21 @@ internal fun bitmapPixelsToCHW(pixels: IntArray, width: Int, height: Int): Float
     return floatArray
 }
 
-internal fun parseYoloDetections(
-    output: FloatArray,
-    fieldsPerDetection: Int,
-    confidenceThreshold: Float
-): List<OnnxRuntime.Detection> {
-    if (fieldsPerDetection <= 0 || output.size % fieldsPerDetection != 0) {
-        return emptyList()
-    }
+private const val RT_DETR_TEXT_FREE = 2L
+/** The ogkalu RT-DETR's text classes by label id; class 0, `bubble`, frames a balloon rather than its text. */
+private val RT_DETR_TEXT_CLASSES = mapOf(1L to "text_bubble", RT_DETR_TEXT_FREE to "text_free")
+// Below this, `text_free` boxes sound effects and the viewing app's own toolbar labels (#437).
+private const val RT_DETR_TEXT_FREE_FLOOR = 0.5f
 
-    val detections = mutableListOf<OnnxRuntime.Detection>()
-    val numDetections = output.size / fieldsPerDetection
-    for (i in 0 until numDetections) {
-        val base = i * fieldsPerDetection
-        val confidence = output[base + 4]
-        val classId = output[base + 5].toInt()
-        if (confidence >= confidenceThreshold && classId == 0) {
-            detections.add(
-                OnnxRuntime.Detection(
-                    label = "bubble",
-                    confidence = confidence,
-                    bbox = floatArrayOf(
-                        output[base],
-                        output[base + 1],
-                        output[base + 2],
-                        output[base + 3]
-                    )
-                )
-            )
-        }
-    }
-    return detections.sortedByDescending { it.confidence }
+/** Turns the RT-DETR's `labels`, `boxes` (xyxy, page pixels, four per box) and `scores` into text detections. */
+internal fun parseRtDetrDetections(
+    labels: LongArray,
+    boxes: FloatArray,
+    scores: FloatArray,
+    confidenceThreshold: Float
+): List<OnnxRuntime.Detection> = scores.indices.mapNotNull { i ->
+    val label = RT_DETR_TEXT_CLASSES[labels[i]]
+    val threshold = if (labels[i] == RT_DETR_TEXT_FREE) maxOf(confidenceThreshold, RT_DETR_TEXT_FREE_FLOOR) else confidenceThreshold
+    if (label == null || scores[i] < threshold) null
+    else OnnxRuntime.Detection(label, scores[i], boxes.copyOfRange(i * 4, i * 4 + 4))
 }
