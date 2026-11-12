@@ -2,6 +2,7 @@ package com.yomu.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yomu.app.translation.network.DEFAULT_KEEP_ALIVE_MINUTES
 import com.yomu.app.translation.network.ModelsResult
 import com.yomu.app.translation.network.NetworkModelClient
 import com.yomu.app.translation.network.NetworkModelStore
@@ -41,6 +42,7 @@ data class NetworkUiState(
     val apiKey: String = "",
     val model: String = "",
     val backend: TranslationBackend = TranslationBackend.DEVICE,
+    val keepAliveMinutes: Int = DEFAULT_KEEP_ALIVE_MINUTES,
     val models: ModelsState = ModelsState.Idle
 ) {
     /** Whether an address and a model are set, so the network model can be chosen. */
@@ -57,7 +59,7 @@ class NetworkModelViewModel @Inject constructor(
     private val client: NetworkModelClient
 ) : ViewModel() {
     private val _state = MutableStateFlow(store.config().let {
-        NetworkUiState(it.url, it.apiKey, it.model, store.backend())
+        NetworkUiState(it.url, it.apiKey, it.model, store.backend(), it.keepAliveMinutes)
     })
     val state: StateFlow<NetworkUiState> = _state.asStateFlow()
     private var loading: Job? = null
@@ -81,6 +83,11 @@ class NetworkModelViewModel @Inject constructor(
     fun setModel(model: String) {
         store.saveModel(model)
         _state.update { it.copy(model = model) }
+    }
+
+    fun setKeepAlive(minutes: Int) {
+        store.saveKeepAliveMinutes(minutes)
+        _state.update { it.copy(keepAliveMinutes = minutes) }
     }
 
     fun setBackend(backend: TranslationBackend) {

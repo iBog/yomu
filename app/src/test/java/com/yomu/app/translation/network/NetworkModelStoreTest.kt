@@ -45,6 +45,19 @@ class NetworkModelStoreTest {
     }
 
     @Test
+    fun `a model stays loaded for 30 minutes until the reader says otherwise`() {
+        assertEquals(30, store.config().keepAliveMinutes)
+
+        store.saveKeepAliveMinutes(60)
+        assertEquals(60, store.config().keepAliveMinutes)
+
+        prefs.values[NetworkModelStore.KEY_KEEP_ALIVE] = 0
+        assertEquals(30, store.config().keepAliveMinutes)
+        prefs.values[NetworkModelStore.KEY_KEEP_ALIVE] = "soon"
+        assertEquals(30, store.config().keepAliveMinutes)
+    }
+
+    @Test
     fun `an unknown or wrongly typed backend is the on-device model`() {
         prefs.values[NetworkModelStore.KEY_BACKEND] = "mars"
         assertEquals(TranslationBackend.DEVICE, store.backend())

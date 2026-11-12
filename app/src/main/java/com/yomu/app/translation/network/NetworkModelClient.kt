@@ -21,10 +21,15 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/** Where a network model lives: [url] of the server, an optional [apiKey], and the [model] it is asked for. */
-data class NetworkConfig(val url: String, val apiKey: String, val model: String) {
+/**
+ * Where a network model lives: [url] of the server, an optional [apiKey], and the [model] it is asked for. Ollama
+ * unloads a model [keepAliveMinutes] after its last request unless told otherwise, so the next page would wait for it to load.
+ */
+data class NetworkConfig(val url: String, val apiKey: String, val model: String, val keepAliveMinutes: Int = DEFAULT_KEEP_ALIVE_MINUTES) {
     val complete: Boolean get() = url.serverBase() != null && model.isNotBlank()
 }
+
+const val DEFAULT_KEEP_ALIVE_MINUTES = 30
 
 /** The server root, without a trailing slash or `/v1`, or null unless it is an http(s) URL with a host. */
 fun String.serverBase(): String? {
@@ -61,6 +66,8 @@ class NetworkModelClient @Inject constructor(http: OkHttpClient) {
     private val http = http.newBuilder().readTimeout(CHAT_TIMEOUT_SECONDS, TimeUnit.SECONDS).build()
 
     private class Reply(val code: Int, val body: String)
+
+    private val withoutKeepAlive: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     suspend fun listModels(url: String, apiKey: String): ModelsResult {
         val base = url.serverBase() ?: return ModelsResult.Failed(NETWORK_BAD_URL)
@@ -99,8 +106,28 @@ class NetworkModelClient @Inject constructor(http: OkHttpClient) {
         return when {
             reply.code == 401 || reply.code == 403 -> ChatResult.Failed(NETWORK_UNAUTHORIZED)
             reply.code != 200 -> ChatResult.Failed("network_http_${reply.code}")
-            else -> replyText(reply.body)?.let(ChatResult::Success) ?: ChatResult.Failed(NETWORK_BAD_REPLY)
+            else -> replyText(reply.body)?.let { ChatResult.Success(it).also { keepLoaded(base, config) } } ?: ChatResult.Failed(NETWORK_BAD_REPLY)
         }
+    }
+
+    /**
+     * Asks an Ollama server to keep the model loaded for [NetworkConfig.keepAliveMinutes] more. A chat request resets
+     * that time to the server's default (five minutes), so this goes after every page, and the page does not wait for it.
+     * A server without `/api/generate` answers 404 once and is not asked again; every failure is ignored.
+     */
+    private fun keepLoaded(base: String, config: NetworkConfig) {
+        if (base in withoutKeepAlive) return
+        val body = JsonObject().apply {
+            addProperty("model", config.model)
+            addProperty("keep_alive", "${config.keepAliveMinutes}m")
+        }.toString().toRequestBody(JSON)
+        http.newCall(request("$base/api/generate", config.apiKey).post(body).build()).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = Unit
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use { if (it.code in NO_KEEP_ALIVE_CODES) withoutKeepAlive += base }
+            }
+        })
     }
 
     private fun request(url: String, apiKey: String): Request.Builder = Request.Builder().url(url).apply {
@@ -148,6 +175,7 @@ class NetworkModelClient @Inject constructor(http: OkHttpClient) {
         val MODEL_PATHS = listOf("/v1/models", "/api/tags")
         val JSON = "application/json".toMediaType()
         val THINK_BLOCK = Regex("<think>.*?</think>", RegexOption.DOT_MATCHES_ALL)
+        val NO_KEEP_ALIVE_CODES = setOf(404, 405, 501)
         const val CHAT_TIMEOUT_SECONDS = 180L
         const val MAX_TOKENS = 2048
     }

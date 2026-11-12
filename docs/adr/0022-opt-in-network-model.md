@@ -8,6 +8,7 @@ Settings > Providers holds the **On Device Model** and a **Network Model** besid
 
 - **One request per page.** The page goes in a single chat request through `/v1/chat/completions`, with the same id-keyed prompt the on-device batch uses, and the reply is read as `[id] text` lines. A server has no grammar here, so a reply that skips or garbles an id leaves that bubble unanswered, as an unanswered on-device bubble is.
 - **Models come from the server.** `GET /v1/models`, then Ollama's `/api/tags`. If the server answers but lists no models, the reader types the model's name. A refused key or an unreachable server is an error, not a reason to type a name.
+- **The model stays loaded.** A chat request resets Ollama's unload timer to the server default of five minutes, so after every page the app sends `/api/generate` with `keep_alive` (30 minutes by default, 5 minutes to 4 hours in Settings), without waiting for it. A server without that endpoint answers 404 once and is not asked again. This is written against Ollama's documented API and has not been run against a real server.
 - **Detection and OCR stay on the phone.** Only the text of each page leaves it.
 - **The network model writes every target language.** The on-device model's English-only limit and fit budget do not apply while it is in use, and the setup screen does not ask for an on-device translation model.
 - **Recall keys on the server and the model**, so a page translated by one is not shown for the other.

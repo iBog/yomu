@@ -44,6 +44,20 @@
     <string name="settings_network_url">Адрес сервера</string>
     <string name="settings_network_url_hint">http://192.168.1.10:11434</string>
     <string name="settings_network_answered">Сервер ответил</string>
+    <string name="settings_network_keep_alive">Держать модель в памяти</string>
+    <string name="settings_network_keep_alive_hint">Только для Ollama: как долго сервер хранит модель в памяти после страницы, чтобы следующая не ждала её загрузки.</string>
+    <plurals name="settings_network_minutes">
+        <item quantity="one">%d минуту</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+        <item quantity="other">%d минуты</item>
+    </plurals>
+    <plurals name="settings_network_hours">
+        <item quantity="one">%d час</item>
+        <item quantity="few">%d часа</item>
+        <item quantity="many">%d часов</item>
+        <item quantity="other">%d часа</item>
+    </plurals>
     <string name="settings_network_key">API-ключ (необязательно)</string>
     <string name="settings_network_model">Модель</string>
     <string name="settings_network_model_choose">Выберите модель</string>

@@ -44,6 +44,16 @@
     <string name="settings_network_url">Server URL</string>
     <string name="settings_network_url_hint">http://192.168.1.10:11434</string>
     <string name="settings_network_answered">The server answered</string>
+    <string name="settings_network_keep_alive">Keep model loaded</string>
+    <string name="settings_network_keep_alive_hint">Ollama only: how long the server keeps the model in memory after a page, so the next page doesn\'t wait for it to load.</string>
+    <plurals name="settings_network_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="settings_network_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
     <string name="settings_network_key">API Key (Optional)</string>
     <string name="settings_network_model">Model</string>
     <string name="settings_network_model_choose">Choose a model</string>

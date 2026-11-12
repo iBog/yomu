@@ -62,10 +62,9 @@ fun ProvidersSettings(settings: SettingsViewModel, onBack: () -> Unit, networkVi
         BackendPanel(BackendState(network.backend, network.ready), networkViewModel::setBackend)
         Dimmed(network.active) { ModelSlot(state, settings, ModelType.LLM, R.string.settings_model_title, R.string.settings_model_description) }
         // Open while it is being set up, so the choice above is never out of reach; once it is set up, only the chosen one is editable.
-        NetworkModelPanel(
-            network, networkViewModel::setUrl, networkViewModel::setApiKey, networkViewModel::setModel,
-            enabled = network.backend == TranslationBackend.NETWORK || !network.ready
-        )
+        Dimmed(network.backend != TranslationBackend.NETWORK && network.ready) {
+            NetworkModelPanel(network, networkViewModel::setUrl, networkViewModel::setApiKey, networkViewModel::setModel, networkViewModel::setKeepAlive)
+        }
     }
 }
 

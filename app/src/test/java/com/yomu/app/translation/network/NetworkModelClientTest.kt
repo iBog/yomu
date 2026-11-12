@@ -20,7 +20,7 @@ class NetworkModelClientTest {
     private var handler: (Request) -> Pair<Int, String> = { 404 to "" }
 
     private val client = NetworkModelClient(
-        OkHttpClient.Builder().addInterceptor(Interceptor { chain ->
+        OkHttpClient.Builder().dispatcher(okhttp3.Dispatcher(InlineExecutor())).addInterceptor(Interceptor { chain ->
             val request = chain.request()
             requests += request
             val (code, body) = handler(request)
@@ -102,7 +102,7 @@ class NetworkModelClientTest {
         val result = client.chat(config.copy(apiKey = "k"), "sys", "user text", 0.2f)
 
         assertEquals(ChatResult.Success("[1] Привет"), result)
-        val request = requests.single()
+        val request = requests.first()
         assertEquals("http://192.168.1.10:11434/v1/chat/completions", request.url.toString())
         assertEquals("Bearer k", request.header("Authorization"))
         val sent = okio.Buffer().also { request.body!!.writeTo(it) }.readUtf8()
@@ -130,4 +130,51 @@ class NetworkModelClientTest {
         val slow = NetworkModelClient(OkHttpClient.Builder().addInterceptor { throw SocketTimeoutException("t") }.build())
         assertEquals(ChatResult.Failed("network_timeout"), slow.chat(config, "s", "u", 0.2f))
     }
+
+    @Test
+    fun `the model is asked to stay loaded for 30 minutes after a page unless set otherwise`() = runTest {
+        handler = { request ->
+            if (request.url.encodedPath == "/api/generate") 200 to "{}" else 200 to """{"choices":[{"message":{"content":"[1] Hi"}}]}"""
+        }
+
+        client.chat(config, "s", "u", 0.2f)
+        client.chat(config.copy(keepAliveMinutes = 60), "s", "u", 0.2f)
+
+        val keepAlive = requests.filter { it.url.encodedPath == "/api/generate" }.map { okio.Buffer().also { b -> it.body!!.writeTo(b) }.readUtf8() }
+        assertEquals(2, keepAlive.size)
+        assertTrue(keepAlive[0], keepAlive[0].contains("\"keep_alive\":\"30m\"") && keepAlive[0].contains("\"model\":\"qwen\""))
+        assertTrue(keepAlive[1], keepAlive[1].contains("\"keep_alive\":\"60m\""))
+        assertEquals("/v1/chat/completions", requests.first().url.encodedPath)
+    }
+
+    @Test
+    fun `a server without that endpoint is asked once and then left alone`() = runTest {
+        handler = { request ->
+            if (request.url.encodedPath == "/api/generate") 404 to "" else 200 to """{"choices":[{"message":{"content":"[1] Hi"}}]}"""
+        }
+
+        client.chat(config, "s", "u", 0.2f)
+        client.chat(config, "s", "u", 0.2f)
+
+        assertEquals(1, requests.count { it.url.encodedPath == "/api/generate" })
+    }
+
+    @Test
+    fun `a failed chat extends nothing`() = runTest {
+        handler = { 500 to "" }
+
+        client.chat(config, "s", "u", 0.2f)
+
+        assertEquals(0, requests.count { it.url.encodedPath == "/api/generate" })
+    }
+}
+
+/** Runs OkHttp's calls on the calling thread, so a fire-and-forget request has been sent when the test looks. */
+private class InlineExecutor : java.util.concurrent.AbstractExecutorService() {
+    override fun execute(command: Runnable) = command.run()
+    override fun shutdown() = Unit
+    override fun shutdownNow(): List<Runnable> = emptyList()
+    override fun isShutdown(): Boolean = false
+    override fun isTerminated(): Boolean = false
+    override fun awaitTermination(timeout: Long, unit: java.util.concurrent.TimeUnit): Boolean = true
 }
