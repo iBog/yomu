@@ -107,7 +107,7 @@ Changes in this fork since it branched from [`artsaraiva/yomu`](https://github.c
 ```mermaid
 flowchart LR
     A[Tap floating button] --> B[Screen capture<br/><sub>MediaProjection</sub>]
-    B --> C[Bubble detection<br/><sub>YOLO26n · ONNX</sub>]
+    B --> C[Bubble detection<br/><sub>RT-DETR v4-s · ONNX</sub>]
     C --> D[OCR per bubble<br/><sub>manga-ocr · ONNX</sub>]
     D --> E[Context assembly<br/><sub>panels + reading order</sub>]
     E --> F[Translation<br/><sub>GGUF LLM · llama.cpp</sub>]

@@ -17,6 +17,9 @@ private const val TAG = "RtDetrDetections"
 
 // Class 0 frames the whole balloon; the pipeline crops text for OCR, so only the text classes count.
 private val RT_DETR_TEXT_CLASSES = mapOf(1L to "text_bubble", 2L to "text_free")
+private const val RT_DETR_TEXT_FREE = 2L
+// Below this, `text_free` boxes sound effects and the viewing app's own toolbar labels (#437, #442).
+private const val RT_DETR_TEXT_FREE_FLOOR = 0.5f
 
 /** Runs an RT-DETR text detector on [bitmap]; boxes come back as xyxy page pixels, highest confidence first. */
 internal fun runRtDetrInference(
@@ -52,7 +55,10 @@ internal fun runRtDetrInference(
     emptyList()
 }
 
-/** The text detections in RT-DETR's parallel outputs at or above [confidenceThreshold], highest confidence first. */
+/**
+ * The text detections in RT-DETR's parallel outputs at or above [confidenceThreshold], highest confidence first.
+ * `text_free` is held to a floor of 0.5 even when the threshold is lower.
+ */
 internal fun parseRtDetrDetections(
     labels: LongArray,
     boxes: FloatArray,
@@ -61,7 +67,7 @@ internal fun parseRtDetrDetections(
 ): List<OnnxRuntime.Detection> {
     if (labels.size != scores.size || boxes.size != scores.size * RT_DETR_BOX_FIELDS) return emptyList()
     return scores.indices
-        .filter { scores[it] >= confidenceThreshold && labels[it] in RT_DETR_TEXT_CLASSES }
+        .filter { labels[it] in RT_DETR_TEXT_CLASSES && scores[it] >= thresholdFor(labels[it], confidenceThreshold) }
         .map { i ->
             OnnxRuntime.Detection(
                 label = RT_DETR_TEXT_CLASSES.getValue(labels[i]),
@@ -71,3 +77,6 @@ internal fun parseRtDetrDetections(
         }
         .sortedByDescending { it.confidence }
 }
+
+private fun thresholdFor(label: Long, confidenceThreshold: Float): Float =
+    if (label == RT_DETR_TEXT_FREE) maxOf(confidenceThreshold, RT_DETR_TEXT_FREE_FLOOR) else confidenceThreshold

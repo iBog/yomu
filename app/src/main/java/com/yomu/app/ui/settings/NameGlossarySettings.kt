@@ -14,10 +14,12 @@ import com.yomu.core.GlossaryEntry
 
 @Composable
 fun NameGlossarySettings(viewModel: NameGlossaryViewModel, onBack: () -> Unit) {
+    val enabled by viewModel.enabled.collectAsState()
     val entries by viewModel.entries.collectAsState()
     // The entry being edited; a blank term opens the dialog for a new one.
     var editing by remember { mutableStateOf<GlossaryEntry?>(null) }
     SettingsPage(stringResource(SettingsSection.NameGlossary.title), stringResource(SettingsSection.NameGlossary.description), onBack) {
+        SwitchPanel(stringResource(R.string.settings_glossary_use_title), stringResource(R.string.settings_glossary_use_description), enabled, viewModel::setEnabled)
         PaperButton(stringResource(R.string.settings_glossary_add), { editing = GlossaryEntry("", "") })
         PaperSurface(Modifier.fillMaxWidth()) {
             Column {

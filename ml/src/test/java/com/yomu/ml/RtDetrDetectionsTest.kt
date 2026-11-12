@@ -37,6 +37,18 @@ class RtDetrDetectionsTest {
     }
 
     @Test
+    fun `holds text outside bubbles to a floor of one half`() {
+        val detections = parseRtDetrDetections(
+            labels = longArrayOf(1L, 2L, 2L),
+            boxes = FloatArray(12),
+            scores = floatArrayOf(0.30f, 0.49f, 0.50f),
+            confidenceThreshold = 0.25f
+        )
+
+        assertEquals(listOf("text_free" to 0.50f, "text_bubble" to 0.30f), detections.map { it.label to it.confidence })
+    }
+
+    @Test
     fun `labels each detection with the class it came from`() {
         val detections = parseRtDetrDetections(
             labels = longArrayOf(1L, 2L),

@@ -24,6 +24,7 @@ class QuickSettingsPopup(
     private val windowManager: WindowManager,
     private val modelName: () -> String,
     private val languageSwitch: OverlayLanguageSwitch,
+    private val recallSwitch: OverlayRecallSwitch,
     private val onFontSizeChanged: (Float) -> Unit,
     private val onThresholdChanged: (Float) -> Unit,
     private val hasLastPage: () -> Boolean,
@@ -113,6 +114,7 @@ class QuickSettingsPopup(
         )
         dimmableButtons.forEach { it.setTextColor(dimmableColors) }
         languageSwitch.applyColors(colors)
+        recallSwitch.applyColors(colors)
         seekBars.forEach {
             it.thumbTintList = ColorStateList.valueOf(colors.accent)
             it.progressTintList = ColorStateList.valueOf(colors.accent)
@@ -196,6 +198,7 @@ class QuickSettingsPopup(
                 override fun onStopTrackingTouch(seekBar: SeekBar?) = onThresholdChanged(threshold)
             })
         })
+        addView(recallSwitch.createView())
         addView(textButton(context.getString(R.string.overlay_report_last_page)) { remove(); onReportRequested() }.apply {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) }
             dimmableButtons.add(this)

@@ -7,7 +7,8 @@ import javax.inject.Inject
 
 /**
  * The reader's name glossary (#327), kept as one JSON array: empty unless entries are added, and
- * empty again for an unreadable stored value.
+ * empty again for an unreadable stored value. Its switch (#401) pauses the glossary without touching
+ * the entries: on unless turned off, and on again for a wrongly typed stored value.
  */
 // One JSON string in SharedPreferences; move to Room if the glossary gets per-series scope or grows to thousands of entries.
 class NameGlossaryStore @Inject constructor(private val prefs: SharedPreferences) {
@@ -39,10 +40,19 @@ class NameGlossaryStore @Inject constructor(private val prefs: SharedPreferences
 
     fun delete(term: String) = write(load().filter { it.term != term })
 
+    /** The entries a page is translated with: [load] while the glossary is on, nothing while it is off. */
+    fun entriesInUse(): List<GlossaryEntry> = if (isEnabled()) load() else emptyList()
+
+    fun isEnabled(): Boolean = runCatching { prefs.getBoolean(ENABLED_KEY, ENABLED_DEFAULT) }.getOrDefault(ENABLED_DEFAULT)
+
+    fun setEnabled(enabled: Boolean) = prefs.edit().putBoolean(ENABLED_KEY, enabled).apply()
+
     private fun write(entries: List<GlossaryEntry>) = prefs.edit().putString(KEY, gson.toJson(entries)).apply()
 
     companion object {
         const val KEY = "name_glossary"
+        const val ENABLED_KEY = "name_glossary_enabled"
+        const val ENABLED_DEFAULT = true
         private val gson = Gson()
     }
 }

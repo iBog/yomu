@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.RadioButton
+import android.widget.Switch
 import android.widget.TextView
 import com.yomu.app.R
 import com.yomu.app.ui.UiText
@@ -30,6 +31,8 @@ class QuickSettingsPopupTest {
     private var unblocks = 0
     private var unavailable: UiText? = null
     private val chosen = mutableListOf<TargetLanguage>()
+    private val recallChanges = mutableListOf<Boolean>()
+    private val recallSwitch = OverlayRecallSwitch(RuntimeEnvironment.getApplication()) { recallChanges += it }
     private val popup = QuickSettingsPopup(
         context = RuntimeEnvironment.getApplication(),
         windowManager = windowManager,
@@ -41,6 +44,7 @@ class QuickSettingsPopupTest {
             unavailable = { language -> unavailable.takeIf { language != TargetLanguage.ENGLISH } },
             onChosen = { chosen += it }
         ),
+        recallSwitch = recallSwitch,
         onFontSizeChanged = {},
         onThresholdChanged = {},
         hasLastPage = { false },
@@ -100,5 +104,26 @@ class QuickSettingsPopupTest {
 
         assertFalse(checkNotNull(content.withText("French · No model selected")).isEnabled)
         assertTrue((checkNotNull(content.withText("English")) as RadioButton).isChecked)
+    }
+
+    private fun View.recallSwitch(): Switch {
+        val row = checkNotNull(withText("Page recall")).parent as ViewGroup
+        return (0 until row.childCount).map(row::getChildAt).filterIsInstance<Switch>().single()
+    }
+
+    /** The switch shows the stored value and only a tap by the reader reports a change (#401). */
+    @Test
+    fun thePageRecallSwitchShowsTheStoredValueAndReportsOnlyTheReadersFlips() {
+        recallSwitch.update(false)
+        val content = shownContent()
+        val recall = content.recallSwitch()
+        assertFalse(recall.isChecked)
+
+        recallSwitch.update(true)
+        assertTrue(recall.isChecked)
+        assertEquals(emptyList<Boolean>(), recallChanges)
+
+        recall.performClick()
+        assertEquals(listOf(false), recallChanges)
     }
 }

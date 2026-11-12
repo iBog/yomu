@@ -102,6 +102,8 @@
     <string name="settings_recovery_warning">Some saved settings were invalid and are using their defaults: %1$s.</string>
 
     <string name="settings_glossary_add">Add name</string>
+    <string name="settings_glossary_use_title">Use the glossary</string>
+    <string name="settings_glossary_use_description">Off, pages translate as if the list were empty. The names stay.</string>
     <string name="settings_glossary_edit">Edit name</string>
     <string name="settings_glossary_empty">No names yet. Copy the original text from a bubble card, then add it here with the name you want.</string>
     <string name="settings_glossary_source">Original text</string>

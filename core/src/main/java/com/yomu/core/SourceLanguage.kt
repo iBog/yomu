@@ -3,6 +3,7 @@ package com.yomu.core
 // ・ and ー stand in for ellipses and long vowels in otherwise translated lines, so they are not residue.
 private val HAN_OR_KANA = Regex("[぀-ヺヽ-ヿ㐀-䶿一-鿿豈-﫿ｦ-ﾟ]")
 private const val MIN_LETTERS = 2
+private val LATIN_LETTER = Regex("[A-Za-zＡ-Ｚａ-ｚ]")
 
 /** Whether the text has any kana or kanji, which reader-app labels, dates and a lone "!?" never do. */
 fun String.hasHanOrKana(): Boolean = HAN_OR_KANA.containsMatchIn(this)
@@ -22,10 +23,16 @@ enum class SourceLanguage(val code: String, val displayName: String, val promptN
 
     /**
      * Whether an OCR read is worth translating. Japanese needs kana or kanji, which reader-app
-     * labels, dates and a lone "!?" never have; any other source needs two letters.
+     * labels, dates and a lone "!?" never have, and no more Latin letters than those, so a label read with its
+     * icon as a stray kana, such as `ぺ。Share`, is left out (#442); any other source needs two letters.
      */
     fun isReadable(text: String): Boolean =
-        if (this == JAPANESE) text.hasHanOrKana() else text.count { it.isLetter() } >= MIN_LETTERS
+        if (this == JAPANESE) {
+            val japanese = HAN_OR_KANA.findAll(text).count()
+            japanese > 0 && LATIN_LETTER.findAll(text).count() <= japanese
+        } else {
+            text.count { it.isLetter() } >= MIN_LETTERS
+        }
 
     /** Whether a reply still carries the source's own script, which a translation out of Japanese or Chinese never should. */
     fun leftUntranslated(reply: String): Boolean = (this == JAPANESE || this == CHINESE) && reply.hasHanOrKana()

@@ -10,6 +10,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -86,6 +87,24 @@ private fun TargetLanguagePanel(
                     }
                 }
             }
+        }
+    }
+}
+
+/** One on/off setting on its own surface; the whole row toggles it. */
+@Composable
+internal fun SwitchPanel(title: String, description: String, enabled: Boolean, onChange: (Boolean) -> Unit) {
+    PaperSurface(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().toggleable(enabled, role = Role.Switch, onValueChange = onChange).padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(Modifier.width(16.dp))
+            Switch(checked = enabled, onCheckedChange = null)
         }
     }
 }

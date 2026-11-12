@@ -76,4 +76,42 @@ class NameGlossaryStoreTest {
             assertEquals("$stored", emptyList<GlossaryEntry>(), store.load())
         }
     }
+
+    @Test
+    fun `nothing stored loads the glossary on`() {
+        assertTrue(store.isEnabled())
+    }
+
+    @Test
+    fun `turning the glossary off and on again is kept`() {
+        store.setEnabled(false)
+        assertFalse(NameGlossaryStore(prefs).isEnabled())
+
+        store.setEnabled(true)
+        assertTrue(NameGlossaryStore(prefs).isEnabled())
+    }
+
+    @Test
+    fun `a wrongly typed enabled value loads the glossary on`() {
+        prefs.values[NameGlossaryStore.ENABLED_KEY] = "off"
+
+        assertTrue(store.isEnabled())
+    }
+
+    @Test
+    fun `while off the entries in use are empty and the entries are untouched`() {
+        store.save("ルフィ", "Luffy")
+
+        store.setEnabled(false)
+
+        assertEquals(emptyList<GlossaryEntry>(), store.entriesInUse())
+        assertEquals(listOf(GlossaryEntry("ルフィ", "Luffy")), store.load())
+    }
+
+    @Test
+    fun `while on the entries in use are the entries`() {
+        store.save("ルフィ", "Luffy")
+
+        assertEquals(listOf(GlossaryEntry("ルフィ", "Luffy")), store.entriesInUse())
+    }
 }

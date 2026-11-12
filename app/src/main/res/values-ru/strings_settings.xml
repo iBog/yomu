@@ -102,6 +102,8 @@
     <string name="settings_recovery_warning">Некоторые сохранённые настройки оказались недопустимыми и сброшены к значениям по умолчанию: %1$s.</string>
 
     <string name="settings_glossary_add">Добавить имя</string>
+    <string name="settings_glossary_use_title">Использовать глоссарий</string>
+    <string name="settings_glossary_use_description">Если выключить, страницы переводятся так, будто список пуст. Имена остаются в списке.</string>
     <string name="settings_glossary_edit">Изменить имя</string>
     <string name="settings_glossary_empty">Имён пока нет. Скопируйте исходный текст из карточки облачка и добавьте его сюда с нужным вам именем.</string>
     <string name="settings_glossary_source">Исходный текст</string>

@@ -45,7 +45,7 @@ _Avoid_: translation bridge, selected engine wrapper, translation engine
 ### Translation context
 
 **Name glossary**:
-The reader's own list of [[glossary entry|glossary entries]], one for every page and every series, so a name comes out the same on every page. An empty glossary changes nothing.
+The reader's own list of [[glossary entry|glossary entries]], one for every page and every series, so a name comes out the same on every page. An empty glossary changes nothing, and its switch pauses it without touching the entries.
 _Avoid_: dictionary, term base, translation memory
 
 **Glossary entry**:

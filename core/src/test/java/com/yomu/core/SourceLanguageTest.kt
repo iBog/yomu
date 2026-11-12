@@ -33,6 +33,12 @@ class SourceLanguageTest {
     }
 
     @Test
+    fun `japanese leaves out a label read with its icon as a stray kana`() {
+        assertFalse(SourceLanguage.JAPANESE.isReadable("ぺ。Share"))
+        assertTrue(SourceLanguage.JAPANESE.isReadable("OK、はい"))
+    }
+
+    @Test
     fun `another source keeps a read with at least two letters`() {
         assertTrue(SourceLanguage.LATIN_SCRIPT.isReadable("Hi!"))
         assertTrue(SourceLanguage.CYRILLIC_SCRIPT.isReadable("Да."))
