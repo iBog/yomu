@@ -3,6 +3,7 @@ package com.yomu.app.overlay
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Point
 import android.view.View
 import android.view.WindowManager
 import com.yomu.pipeline.typesetting.TypesetBubble
@@ -26,7 +27,7 @@ class TranslationRenderOverlayTest {
     @Test
     fun firstPreviewCanBeTypesetOnSingleBubblePage() {
         val windowManager = mock(WindowManager::class.java)
-        val overlay = TranslationRenderOverlay(RuntimeEnvironment.getApplication(), windowManager)
+        val overlay = TranslationRenderOverlay(RuntimeEnvironment.getApplication(), windowManager) { Point(120, 80) }
         val bounds = OverlayBounds(10f, 10f, 110f, 70f)
         overlay.showOcrBubbles(listOf(OverlayBubbleState(1, bounds, "OCR")), 120, 80)
 

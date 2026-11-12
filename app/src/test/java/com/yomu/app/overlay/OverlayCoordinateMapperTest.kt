@@ -9,8 +9,8 @@ class OverlayCoordinateMapperTest {
         val params = OverlayCoordinateMapper.params(
             captureWidth = 1080,
             captureHeight = 2400,
-            canvasWidth = 1080,
-            canvasHeight = 2197,
+            displayWidth = 1080,
+            displayHeight = 2400,
             overlayScreenX = 0,
             overlayScreenY = 0
         )
@@ -22,12 +22,12 @@ class OverlayCoordinateMapperTest {
     }
 
     @Test
-    fun `map is identity when overlay starts at display origin even if canvas is shorter`() {
+    fun `map is identity when the frame is the display, even if the overlay window is shorter than it`() {
         val params = OverlayCoordinateMapper.params(
             captureWidth = 1080,
             captureHeight = 2340,
-            canvasWidth = 1080,
-            canvasHeight = 2197,
+            displayWidth = 1080,
+            displayHeight = 2340,
             overlayScreenX = 0,
             overlayScreenY = 0
         )
@@ -48,8 +48,8 @@ class OverlayCoordinateMapperTest {
         val params = OverlayCoordinateMapper.params(
             captureWidth = 1080,
             captureHeight = 2340,
-            canvasWidth = 1080,
-            canvasHeight = 2197,
+            displayWidth = 1080,
+            displayHeight = 2340,
             overlayScreenX = 0,
             overlayScreenY = 63
         )
@@ -66,12 +66,12 @@ class OverlayCoordinateMapperTest {
     }
 
     @Test
-    fun `map supports x scale and x offset`() {
+    fun `map scales a frame that is not the size of the display, and offsets`() {
         val params = OverlayCoordinateMapper.params(
             captureWidth = 1200,
             captureHeight = 800,
-            canvasWidth = 600,
-            canvasHeight = 400,
+            displayWidth = 600,
+            displayHeight = 400,
             overlayScreenX = 100,
             overlayScreenY = 0
         )
@@ -82,9 +82,37 @@ class OverlayCoordinateMapperTest {
         )
 
         assertEquals(50f, mapped.left)
-        assertEquals(100f, mapped.top)
+        assertEquals(50f, mapped.top)
         assertEquals(250f, mapped.right)
-        assertEquals(300f, mapped.bottom)
+        assertEquals(150f, mapped.bottom)
+    }
+
+    @Test
+    fun `a landscape frame the size of the landscape display maps one to one, whatever bars shrink the window`() {
+        // 2772 x 1272 screen turned on its side; the overlay window starts below a 72 px status bar and clear of a 48 px side bar.
+        val params = OverlayCoordinateMapper.params(
+            captureWidth = 2772,
+            captureHeight = 1272,
+            displayWidth = 2772,
+            displayHeight = 1272,
+            overlayScreenX = 48,
+            overlayScreenY = 72
+        )
+
+        val mapped = OverlayCoordinateMapper.map(floatArrayOf(1000f, 600f, 1400f, 700f), params)
+
+        assertEquals(1f, params.scaleX)
+        assertEquals(1f, params.scaleY)
+        assertEquals(952f, mapped.left)
+        assertEquals(528f, mapped.top)
+    }
+
+    @Test
+    fun `a portrait frame left on a landscape display is stretched to it, not silently trusted`() {
+        val params = OverlayCoordinateMapper.params(1272, 2772, 2772, 1272, 0, 0)
+
+        assertEquals(2772f / 1272f, params.scaleX, 0.0001f)
+        assertEquals(1272f / 2772f, params.scaleY, 0.0001f)
     }
 
     @Test

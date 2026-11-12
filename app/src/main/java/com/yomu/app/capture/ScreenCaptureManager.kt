@@ -11,7 +11,6 @@ import android.media.projection.MediaProjectionManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.util.DisplayMetrics
 import android.view.WindowManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -27,6 +26,12 @@ class ScreenCaptureManager @Inject constructor(
         private const val CAPTURE_TIMEOUT_MS = 4_000L
         private const val CAPTURE_POLL_INTERVAL_MS = 80L
     }
+
+    private var captureWidth = 0
+    private var captureHeight = 0
+    private var captureDensity = 0
+
+    private val windowManager get() = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
@@ -60,15 +65,13 @@ class ScreenCaptureManager @Inject constructor(
             }
         }, mainHandler)
 
-        val metrics = DisplayMetrics()
-        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        @Suppress("DEPRECATION")
-        val display = windowManager.defaultDisplay
-        display.getRealMetrics(metrics)
-
-        val density = metrics.densityDpi
-        val width = metrics.widthPixels
-        val height = metrics.heightPixels
+        val display = realDisplaySize(windowManager)
+        captureWidth = display.x
+        captureHeight = display.y
+        captureDensity = context.resources.displayMetrics.densityDpi
+        val width = captureWidth
+        val height = captureHeight
+        val density = captureDensity
 
         imageReader = ImageReader.newInstance(
             width, height, PixelFormat.RGBA_8888, 2
@@ -86,7 +89,26 @@ class ScreenCaptureManager @Inject constructor(
         isProjectionActive = true
     }
 
+    /**
+     * Makes the capture the size of the display as it is turned now. The virtual display keeps the size it was made at,
+     * so after a rotation it would squeeze the screen into the old shape and every box found on it would sit in the
+     * wrong place. A new reader goes with the new size, so no frame of the old shape is ever read.
+     */
+    fun matchDisplay() {
+        val display = realDisplaySize(windowManager)
+        val mirror = virtualDisplay ?: return
+        if (display.x == captureWidth && display.y == captureHeight) return
+        val reader = ImageReader.newInstance(display.x, display.y, PixelFormat.RGBA_8888, 2)
+        mirror.resize(display.x, display.y, captureDensity)
+        mirror.surface = reader.surface
+        imageReader?.close()
+        imageReader = reader
+        captureWidth = display.x
+        captureHeight = display.y
+    }
+
     fun captureScreen(onBitmapReady: (Bitmap?) -> Unit) {
+        matchDisplay()
         val reader = imageReader
         if (!isProjectionActive || reader == null) {
             Log.i(TAG, "capture projectionActive=$isProjectionActive attempts=0 gotFrame=false width=0 height=0 timeoutFired=false")

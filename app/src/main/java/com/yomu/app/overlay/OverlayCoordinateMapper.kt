@@ -19,20 +19,21 @@ object OverlayCoordinateMapper {
         val scaleY: Float
     )
 
+    /**
+     * A captured frame is laid over the screen, so the scale is the screen over the frame: 1 while the frame is the
+     * size of the display, whatever the overlay window's own size is (system bars and cutouts shrink the window, not
+     * the picture). The window's place on the screen is the offset.
+     */
     fun params(
         captureWidth: Int,
         captureHeight: Int,
-        canvasWidth: Int,
-        canvasHeight: Int,
+        displayWidth: Int,
+        displayHeight: Int,
         overlayScreenX: Int,
         overlayScreenY: Int
     ): MapParams {
-        val scaleX = if (captureWidth > 0) canvasWidth.toFloat() / captureWidth else 1f
-        val scaleY = if (captureHeight > 0 && canvasHeight > captureHeight) {
-            canvasHeight.toFloat() / captureHeight
-        } else {
-            1f
-        }
+        val scaleX = if (captureWidth > 0 && displayWidth > 0) displayWidth.toFloat() / captureWidth else 1f
+        val scaleY = if (captureHeight > 0 && displayHeight > 0) displayHeight.toFloat() / captureHeight else 1f
         return MapParams(
             offsetX = overlayScreenX.toFloat(),
             offsetY = overlayScreenY.toFloat(),

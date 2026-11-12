@@ -11,6 +11,7 @@ import com.yomu.app.withAppLanguage
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.graphics.Point
 import android.graphics.RectF
 import android.media.projection.MediaProjectionManager
 import android.os.Build
@@ -23,6 +24,7 @@ import android.view.WindowManager
 import com.yomu.app.MainActivity
 import com.yomu.app.R
 import com.yomu.app.capture.ScreenCaptureManager
+import com.yomu.app.capture.realDisplaySize
 import com.yomu.app.detection.DetectionThresholdStore
 import com.yomu.app.overlay.FloatingButtonView
 import com.yomu.app.overlay.FloatingButtonOverlay
@@ -126,6 +128,7 @@ class OverlayService : Service() {
     private var buttonPositionY: Int = 0
 
     private var translationJob: Job? = null
+    private var displaySize = Point()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -171,6 +174,7 @@ class OverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        displaySize = realDisplaySize(windowManager)
         floatingButtonOverlay = FloatingButtonOverlay(this, windowManager)
         translationRenderOverlay = TranslationRenderOverlay(this, windowManager)
         statusOverlay = TranslationStatusOverlay(this, windowManager)
@@ -292,6 +296,13 @@ class OverlayService : Service() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        val size = realDisplaySize(windowManager)
+        if (size != displaySize) {
+            // Turned: the capture follows the screen, and a page captured or drawn before the turn no longer fits it.
+            displaySize = size
+            screenCaptureManager.matchDisplay()
+            cancelTranslation()
+        }
         removeQuickSettingsPopup()
         floatingButtonOverlay.keepInBounds()
         updateOverlayAppearance()

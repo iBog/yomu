@@ -4,18 +4,22 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Point
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.os.Build
 import android.util.Log
 import android.view.WindowInsets
+import com.yomu.app.capture.realDisplaySize
 import android.view.WindowManager
 import android.widget.FrameLayout
 import com.yomu.pipeline.typesetting.TypesetBubble
 
 class TranslationRenderOverlay(
     private val context: Context,
-    private val windowManager: WindowManager
+    private val windowManager: WindowManager,
+    /** The whole display as it is turned now, which is what a captured frame is laid over. */
+    private val displaySize: () -> Point = { realDisplaySize(windowManager) }
 ) {
     companion object {
         private const val TAG = "TranslationRender"
@@ -46,11 +50,12 @@ class TranslationRenderOverlay(
             override fun onDraw(canvas: Canvas) {
                 super.onDraw(canvas)
                 getLocationOnScreen(screenLocation)
+                val display = displaySize()
                 val mapParams = OverlayCoordinateMapper.params(
                     captureWidth = pageWidth,
                     captureHeight = pageHeight,
-                    canvasWidth = canvas.width,
-                    canvasHeight = canvas.height,
+                    displayWidth = display.x,
+                    displayHeight = display.y,
                     overlayScreenX = screenLocation[0],
                     overlayScreenY = screenLocation[1]
                 )
@@ -111,11 +116,12 @@ class TranslationRenderOverlay(
             override fun onDraw(canvas: Canvas) {
                 super.onDraw(canvas)
                 getLocationOnScreen(screenLocation)
+                val display = displaySize()
                 val mapParams = OverlayCoordinateMapper.params(
                     captureWidth = this@TranslationRenderOverlay.pageWidth,
                     captureHeight = this@TranslationRenderOverlay.pageHeight,
-                    canvasWidth = canvas.width,
-                    canvasHeight = canvas.height,
+                    displayWidth = display.x,
+                    displayHeight = display.y,
                     overlayScreenX = screenLocation[0],
                     overlayScreenY = screenLocation[1]
                 )
@@ -271,9 +277,7 @@ class TranslationRenderOverlay(
         canvas.restoreToCount(saveCount)
     }
 
-    private fun dpToPx(dp: Float): Float {
-        return dp * context.resources.displayMetrics.density
-    }
+    private fun dpToPx(dp: Float): Float = dp * context.resources.displayMetrics.density
 
     private fun wrapText(text: String, maxWidth: Float, paint: Paint): List<String> {
         val words = text.split(" ")
