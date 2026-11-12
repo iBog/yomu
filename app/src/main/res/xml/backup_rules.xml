@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 11 and older: the network model's API key stays out of backups. -->
+<!-- Android 11 and older: the network model's settings stay out of backups: the encrypted file cannot be read without its Keystore key. -->
 <full-backup-content>
     <exclude domain="sharedpref" path="yomu_network_secret.xml" />
+    <exclude domain="sharedpref" path="yomu_secure_prefs.xml" />
+    <exclude domain="sharedpref" path="yomu_network_unsecured.xml" />
 </full-backup-content>

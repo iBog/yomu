@@ -19,14 +19,55 @@ class NetworkModelStoreTest {
     }
 
     @Test
-    fun `the API key is kept apart from the other preferences`() {
+    fun `the address, key, model and keep-alive are kept in the secure preferences and none of them in the plain ones`() {
         store.saveUrl(" http://h:1 ")
         store.saveApiKey(" secret ")
         store.saveModel("m")
+        store.saveKeepAliveMinutes(60)
+        store.saveBackend(TranslationBackend.NETWORK)
 
-        assertEquals(NetworkConfig("http://h:1", "secret", "m"), store.config())
-        assertTrue(prefs.values.values.none { it == "secret" })
-        assertEquals("secret", secrets.values[NetworkModelStore.KEY_API_KEY])
+        assertEquals(NetworkConfig("http://h:1", "secret", "m", 60), store.config())
+        assertEquals(mapOf(NetworkModelStore.KEY_BACKEND to "network"), prefs.values.toMap())
+        assertEquals(
+            setOf(NetworkModelStore.KEY_URL, NetworkModelStore.KEY_API_KEY, NetworkModelStore.KEY_MODEL, NetworkModelStore.KEY_KEEP_ALIVE),
+            secrets.values.keys
+        )
+    }
+
+    @Test
+    fun `settings kept in plain files by earlier builds move into the secure preferences and leave nothing behind`() {
+        val legacy = MapSharedPreferences()
+        prefs.values[NetworkModelStore.KEY_URL] = "http://old:11434"
+        prefs.values[NetworkModelStore.KEY_MODEL] = "qwen"
+        prefs.values[NetworkModelStore.KEY_KEEP_ALIVE] = 60
+        prefs.values[NetworkModelStore.KEY_BACKEND] = "network"
+        legacy.values[NetworkModelStore.KEY_API_KEY] = "old-key"
+
+        store.migrateLegacy(legacy)
+
+        assertEquals(NetworkConfig("http://old:11434", "old-key", "qwen", 60), store.config())
+        assertEquals(mapOf(NetworkModelStore.KEY_BACKEND to "network"), prefs.values.toMap())
+        assertTrue(legacy.values.isEmpty())
+        assertTrue(store.active())
+    }
+
+    @Test
+    fun `a value already in the secure preferences wins over a plain leftover`() {
+        secrets.values[NetworkModelStore.KEY_URL] = "http://new:1"
+        prefs.values[NetworkModelStore.KEY_URL] = "http://old:1"
+
+        store.migrateLegacy(MapSharedPreferences())
+
+        assertEquals("http://new:1", store.config().url)
+        assertFalse(prefs.values.containsKey(NetworkModelStore.KEY_URL))
+    }
+
+    @Test
+    fun `migrating with nothing to move changes nothing`() {
+        store.migrateLegacy(MapSharedPreferences())
+
+        assertEquals(NetworkConfig("", "", "", 30), store.config())
+        assertTrue(secrets.values.isEmpty() && prefs.values.isEmpty())
     }
 
     @Test
@@ -51,9 +92,9 @@ class NetworkModelStoreTest {
         store.saveKeepAliveMinutes(60)
         assertEquals(60, store.config().keepAliveMinutes)
 
-        prefs.values[NetworkModelStore.KEY_KEEP_ALIVE] = 0
+        secrets.values[NetworkModelStore.KEY_KEEP_ALIVE] = 0
         assertEquals(30, store.config().keepAliveMinutes)
-        prefs.values[NetworkModelStore.KEY_KEEP_ALIVE] = "soon"
+        secrets.values[NetworkModelStore.KEY_KEEP_ALIVE] = "soon"
         assertEquals(30, store.config().keepAliveMinutes)
     }
 

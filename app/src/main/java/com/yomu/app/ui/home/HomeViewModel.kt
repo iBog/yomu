@@ -80,6 +80,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         sharedPreferences.registerOnSharedPreferenceChangeListener(selectionListener)
+        networkStore.registerListener(selectionListener)
         ContextCompat.registerReceiver(context, serviceStateReceiver, IntentFilter().apply {
             addAction(OverlayService.ACTION_SERVICE_STARTED)
             addAction(OverlayService.ACTION_SERVICE_STOPPED)
@@ -289,6 +290,7 @@ class HomeViewModel @Inject constructor(
 
     override fun onCleared() {
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(selectionListener)
+        networkStore.unregisterListener(selectionListener)
         context.unregisterReceiver(serviceStateReceiver)
         super.onCleared()
     }

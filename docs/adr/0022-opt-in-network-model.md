@@ -17,7 +17,7 @@ Settings > Providers holds the **On Device Model** and a **Network Model** besid
 
 - **Page text leaves the phone.** The README's "nothing leaves your phone" is now true by default, not always. Settings says so on the section itself.
 - **Cleartext traffic is allowed.** A server on a home network is `http://192.168.x.x`, and Android blocks that unless `usesCleartextTraffic` is set. Android cannot limit it to local addresses, so the setting is app-wide. Every model download still uses https URLs pinned to a revision.
-- **The API key is stored in the app's private storage**, in a file of its own that backups and device transfers exclude. It is not encrypted at rest.
+- **The address, the API key, the model and its keep-alive time are stored encrypted**, in `EncryptedSharedPreferences` (AES-256, key in the Android Keystore), in a file that backups and device transfers exclude, since it cannot be read without the Keystore key. Which engine translates is not a secret and stays in the plain preferences. Settings kept in plain files by earlier builds are moved on the first start and removed. If the Keystore cannot be used at all, they fall back to a private unencrypted file and the app logs it, rather than crash.
 - **A second translation path to support**, which ADR-0018 named as the reason to refuse. It is kept small: one slot behind the same `TranslationSlot` interface, no other stage knows the difference.
 
 ## Not done

@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12 and newer: the network model's API key stays out of cloud backups and device transfers. -->
+<!-- Android 12 and newer: the network model's settings stay out of cloud backups and device transfers: the encrypted file cannot be read without its Keystore key. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="yomu_network_secret.xml" />
+        <exclude domain="sharedpref" path="yomu_secure_prefs.xml" />
+        <exclude domain="sharedpref" path="yomu_network_unsecured.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="yomu_network_secret.xml" />
+        <exclude domain="sharedpref" path="yomu_secure_prefs.xml" />
+        <exclude domain="sharedpref" path="yomu_network_unsecured.xml" />
     </device-transfer>
 </data-extraction-rules>
