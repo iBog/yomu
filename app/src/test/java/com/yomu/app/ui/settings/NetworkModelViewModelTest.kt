@@ -64,6 +64,20 @@ class NetworkModelViewModelTest {
     }
 
     @Test
+    fun `a model is kept by its name, wherever sorting puts it in the list`() = runTest {
+        val viewModel = NetworkModelViewModel(store, client)
+        viewModel.setUrl("http://h:11434")
+        advanceUntilIdle()
+
+        // The server listed qwen first; the screen lists gemma first. The choice is the name, not a position.
+        viewModel.setModel("qwen")
+
+        assertEquals("qwen", store.config().model)
+        assertEquals("qwen", viewModel.state.value.model)
+        assertEquals(ModelsState.Listed(listOf("gemma", "qwen")), viewModel.state.value.models)
+    }
+
+    @Test
     fun `a server without a model list lets the reader type the model`() = runTest {
         reply = 404 to ""
         val viewModel = NetworkModelViewModel(store, client)
