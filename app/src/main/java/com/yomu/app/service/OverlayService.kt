@@ -26,8 +26,9 @@ import com.yomu.app.R
 import com.yomu.app.capture.ScreenCaptureManager
 import com.yomu.app.capture.realDisplaySize
 import com.yomu.app.detection.DetectionThresholdStore
-import com.yomu.app.overlay.FloatingButtonView
+import com.yomu.app.overlay.DisplayProbe
 import com.yomu.app.overlay.FloatingButtonOverlay
+import com.yomu.app.overlay.FloatingButtonView
 import com.yomu.app.overlay.OverlayBounds
 import com.yomu.app.overlay.OverlayBubbleState
 import com.yomu.app.overlay.OverlayLanguageSwitch
@@ -128,7 +129,7 @@ class OverlayService : Service() {
     private var buttonPositionY: Int = 0
 
     private var translationJob: Job? = null
-    private var displaySize = Point()
+    private lateinit var displayProbe: DisplayProbe
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -174,9 +175,13 @@ class OverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        displaySize = realDisplaySize(this, windowManager)
         floatingButtonOverlay = FloatingButtonOverlay(this, windowManager)
-        translationRenderOverlay = TranslationRenderOverlay(this, windowManager)
+        displayProbe = DisplayProbe(this, windowManager) { _, first ->
+            // The capture follows the screen. A turn also ends what was captured or drawn before it, which no longer fits.
+            screenCaptureManager.matchDisplay()
+            if (!first) cancelTranslation()
+        }
+        translationRenderOverlay = TranslationRenderOverlay(this, windowManager) { displaySize() }
         statusOverlay = TranslationStatusOverlay(this, windowManager)
         readingNotification = ReadingNotification(this)
         sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceListener)
@@ -243,6 +248,8 @@ class OverlayService : Service() {
         }
 
         // A button left after sharing ends would fail every tap; with the service gone, Home reads "Reading is OFF" (#353).
+        screenCaptureManager.displayProvider = { displayProbe.size }
+        displayProbe.attach()
         screenCaptureManager.startProjection(projection) {
             Log.i(TAG, "Screen sharing ended; stopping")
             stopSelf()
@@ -296,13 +303,6 @@ class OverlayService : Service() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val size = realDisplaySize(this, windowManager)
-        if (size != displaySize) {
-            // Turned: the capture follows the screen, and a page captured or drawn before the turn no longer fits it.
-            displaySize = size
-            screenCaptureManager.matchDisplay()
-            cancelTranslation()
-        }
         removeQuickSettingsPopup()
         floatingButtonOverlay.keepInBounds()
         updateOverlayAppearance()
@@ -465,6 +465,8 @@ class OverlayService : Service() {
         ?: slotSelection.selectedId(ModelType.LLM)
         ?.let { id -> slotSelection.deliverables(ModelType.LLM).firstOrNull { it.id == id }?.name }
         ?: getString(R.string.service_no_model_selected)
+
+    private fun displaySize(): Point = displayProbe.size ?: realDisplaySize(this, windowManager)
 
     private fun removeQuickSettingsPopup() {
         quickSettingsPopup?.remove()

@@ -3,6 +3,7 @@ package com.yomu.app.capture
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
+import android.graphics.Point
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
@@ -26,6 +27,9 @@ class ScreenCaptureManager @Inject constructor(
         private const val CAPTURE_TIMEOUT_MS = 4_000L
         private const val CAPTURE_POLL_INTERVAL_MS = 80L
     }
+
+    /** Where the display's size comes from while reading is on: a probe window that is laid out again at every turn. */
+    var displayProvider: (() -> Point?)? = null
 
     private var captureWidth = 0
     private var captureHeight = 0
@@ -65,7 +69,7 @@ class ScreenCaptureManager @Inject constructor(
             }
         }, mainHandler)
 
-        val display = realDisplaySize(context, windowManager)
+        val display = displaySize()
         captureWidth = display.x
         captureHeight = display.y
         captureDensity = context.resources.displayMetrics.densityDpi
@@ -94,8 +98,9 @@ class ScreenCaptureManager @Inject constructor(
      * so after a rotation it would squeeze the screen into the old shape and every box found on it would sit in the
      * wrong place. A new reader goes with the new size, so no frame of the old shape is ever read.
      */
+    @Synchronized
     fun matchDisplay() {
-        val display = realDisplaySize(context, windowManager)
+        val display = displaySize()
         val mirror = virtualDisplay ?: return
         Log.d(TAG, "match display=${display.x}x${display.y} capture=${captureWidth}x$captureHeight")
         if (display.x == captureWidth && display.y == captureHeight) return
@@ -108,6 +113,8 @@ class ScreenCaptureManager @Inject constructor(
         captureHeight = display.y
         Log.i(TAG, "capture resized to ${display.x}x${display.y}")
     }
+
+    private fun displaySize(): Point = displayProvider?.invoke() ?: realDisplaySize(context, windowManager)
 
     fun captureScreen(onBitmapReady: (Bitmap?) -> Unit) {
         matchDisplay()
