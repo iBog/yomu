@@ -17,9 +17,11 @@ fun resolveReadiness(
     detectionModelId: String?,
     ocrModelId: String?,
     translationModelId: String?,
-    hasOverlayPermission: Boolean
+    hasOverlayPermission: Boolean,
+    /** False while the Network Model translates, when no model has to be downloaded for it. */
+    translationOnDevice: Boolean = true
 ): Readiness {
-    val modelsReady = listOf(detectionModelId, ocrModelId, translationModelId).all { models[it] == ModelStatus.READY }
+    val modelsReady = (listOf(detectionModelId, ocrModelId) + listOf(translationModelId).filter { translationOnDevice }).all { models[it] == ModelStatus.READY }
     return when {
         modelsReady && hasOverlayPermission -> Readiness.Ready
         modelsReady -> Readiness.NeedsPermission

@@ -38,6 +38,8 @@ data class HomeUiState(
     val translationSelectedId: String? = null,
     val translationPendingId: String? = null,
     val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH,
+    /** Whether pages are translated by the network model, which writes every target language and has its own name. */
+    val networkModel: String? = null,
     /** Whether translated pages are kept in Recent; the empty list says so when they are not. */
     val saveHistory: Boolean = true,
     /** The source language the reader named (#444); null is Auto. */
@@ -67,13 +69,14 @@ data class HomeUiState(
     fun languageBlock(deliverable: SlotDeliverable): UiText? = ModelSlotSelection.languageBlock(deliverable, targetLanguage)
 
     fun languageUnavailable(language: TargetLanguage): UiText? =
-        ModelSlotSelection.languageUnavailable(language, deliverables[ModelType.LLM].orEmpty(), ::fits)
+        if (networkModel != null) null else ModelSlotSelection.languageUnavailable(language, deliverables[ModelType.LLM].orEmpty(), ::fits)
 
     fun spokenChipLabel(): UiText = UiText(R.string.home_chip_from, UiText(spoken?.labelRes() ?: R.string.language_auto))
 
     fun languageChipLabel(): UiText = UiText(R.string.home_chip_to, UiText(targetLanguage.labelRes()))
 
     fun translationChipLabel(): UiText {
+        networkModel?.let { return UiText(R.string.home_chip_network, it) }
         val options = deliverables[ModelType.LLM].orEmpty()
         val selected = options.firstOrNull { it.id == translationSelectedId }?.name
             ?.let { UiText(R.string.home_verbatim, it) } ?: UiText(R.string.home_chip_no_model)

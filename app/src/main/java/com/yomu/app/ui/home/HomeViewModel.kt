@@ -19,6 +19,7 @@ import com.yomu.app.service.SourceLanguageSelection
 import com.yomu.app.ui.UiText
 import com.yomu.app.service.OverlayService
 import com.yomu.app.service.TriggerModeStore
+import com.yomu.app.translation.network.NetworkModelStore
 import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,9 +42,9 @@ class HomeViewModel @Inject constructor(
     private val modelManager: ModelManager,
     private val historyDao: HistoryDao,
     private val slotSelection: ModelSlotSelection,
-    private val sourceLanguage: SourceLanguageSelection
+    private val sourceLanguage: SourceLanguageSelection,
+    private val networkStore: NetworkModelStore
 ) : ViewModel() {
-
     private companion object {
         const val SETUP_COMPLETE = "reading_setup_complete"
         const val HAS_READ = "has_read"
@@ -105,8 +106,7 @@ class HomeViewModel @Inject constructor(
                 state.models.associate { it.id to it.status },
                 slotSelection.selectedId(ModelType.DETECTION),
                 slotSelection.selectedId(ModelType.OCR),
-                slotSelection.selectedId(ModelType.LLM),
-                permission
+                slotSelection.selectedId(ModelType.LLM), permission, !networkStore.active()
             )
             state.copy(
                 readiness = readiness,
@@ -203,6 +203,7 @@ class HomeViewModel @Inject constructor(
         targetLanguage = slotSelection.targetLanguage(),
         spoken = sourceLanguage.current(),
         saveHistory = SaveHistoryStore(sharedPreferences).load(),
+        networkModel = networkStore.takeIf { it.active() }?.config()?.model,
         setupDownloadBytes = slotSelection.downloadBytes(models.associate { it.id to it.status })
     )
 

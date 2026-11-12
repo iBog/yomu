@@ -78,12 +78,18 @@ data class TranslationResult(
     val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH
 )
 
+private const val NETWORK_ERROR_PREFIX = "network_"
+private val NETWORK_OUTCOMES = setOf(TranslationOutcome.ERROR, TranslationOutcome.TIMEOUT)
+
 /** Why a page came back untranslated, for the caller to word in the reader's language. */
 sealed interface ReaderFailure {
     /** The model in use writes English only and was asked for another language. */
     data object EnglishOnly : ReaderFailure
     data object ModelMissing : ReaderFailure
     data class NotLoaded(val code: String) : ReaderFailure
+
+    /** The server a network model runs on did not answer, refused the key or sent something unusable; [code] says which. */
+    data class NetworkFailed(val code: String) : ReaderFailure
 }
 
 /** How many bubbles of a page the model left unanswered. */
@@ -96,6 +102,7 @@ data class UntranslatedNotice(val missing: Int, val total: Int)
  */
 fun TranslationResult.readerFailure(): ReaderFailure? = when {
     errorCode == ERROR_ENGLISH_ONLY -> ReaderFailure.EnglishOnly
+    errorCode?.startsWith(NETWORK_ERROR_PREFIX) == true && outcome in NETWORK_OUTCOMES -> ReaderFailure.NetworkFailed(errorCode)
     outcome != TranslationOutcome.NOT_LOADED -> null
     errorCode == ERROR_MODEL_MISSING -> ReaderFailure.ModelMissing
     else -> ReaderFailure.NotLoaded(errorCode ?: "not_ready")

@@ -74,6 +74,10 @@ _Avoid_: bug bundle, diagnostics dump, crash report
 What the reader says a page is written in, chosen on Home: Auto, or one of the languages in `SpokenLanguage`. Auto names no source in the prompt, only the [[target language]]; a language is named there and picks the OCR model that reads its script. The curated OCR model in the OCR slot still fixes the script a page is read in: manga-ocr reads Japanese, and a PP-OCRv5 recognizer reads Chinese and English, Korean, Latin-script or Cyrillic-script text. A choice whose script the OCR model does not read (the model was changed in Settings) counts as Auto.
 _Avoid_: input language, original language
 
+**Network model**:
+A translation model that runs on a server the reader sets up (Ollama, llama.cpp or an OpenAI-compatible API) instead of on the phone, chosen in Settings > Translation beside the on-device model. Only the text of each page is sent; detection and OCR stay on the phone. Off until the reader chooses it, and it writes every [[target language]].
+_Avoid_: cloud translator, remote model, API model
+
 **Target language**:
 The language the reader reads translations in. English is the default and the only target an English-only [[deliverable]] can produce.
 _Avoid_: output language, destination language, locale

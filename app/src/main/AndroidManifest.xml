@@ -9,12 +9,16 @@
     <!-- Without it Android 13+ keeps the reading notification out of the shade, and with it the shade trigger. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- A network model usually lives on the local network at an http:// address, which Android blocks by default. -->
     <application
         android:name=".YomuApplication"
         android:icon="@mipmap/ic_launcher"
         android:label="Yomu"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:usesCleartextTraffic="true">
         
         <activity
             android:name=".MainActivity"

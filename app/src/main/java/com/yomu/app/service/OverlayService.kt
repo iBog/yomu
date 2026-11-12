@@ -450,7 +450,8 @@ class OverlayService : Service() {
         }
     }
 
-    private fun translationModelName(): String = slotSelection.selectedId(ModelType.LLM)
+    private fun translationModelName(): String = translationSelection.networkModelName()?.let { getString(R.string.home_chip_network, it) }
+        ?: slotSelection.selectedId(ModelType.LLM)
         ?.let { id -> slotSelection.deliverables(ModelType.LLM).firstOrNull { it.id == id }?.name }
         ?: getString(R.string.service_no_model_selected)
 
@@ -654,7 +655,7 @@ class OverlayService : Service() {
 
     /** Snapshots the model choices, generation and runtime limits, rendering settings, target language and name glossary used as the recall key. */
     private fun pageSettings() = PageSettings(
-        translationModel = slotSelection.selectedId(ModelType.LLM),
+        translationModel = translationSelection.activeModelKey(),
         detectionModel = slotSelection.selectedId(ModelType.DETECTION),
         ocrModel = slotSelection.selectedId(ModelType.OCR),
         generation = translationSelection.generationProfile().params,

@@ -41,6 +41,15 @@ class ReadingStateTest {
     }
 
     @Test
+    fun `a network model needs no translation model downloaded`() {
+        val readingOnly = mapOf(detector to ModelStatus.READY, reader to ModelStatus.READY)
+
+        assertEquals(Readiness.NeedsModels, resolveReadiness(readingOnly, detector, reader, translator, true))
+        assertEquals(Readiness.Ready, resolveReadiness(readingOnly, detector, reader, translator, true, translationOnDevice = false))
+        assertEquals(Readiness.NeedsModels, resolveReadiness(mapOf(detector to ModelStatus.READY), detector, reader, translator, true, translationOnDevice = false))
+    }
+
+    @Test
     fun `unselected models in any status do not affect readiness`() {
         val ready = mapOf(
             detector to ModelStatus.READY,

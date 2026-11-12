@@ -46,6 +46,7 @@
     <string name="home_chip_from">From: %1$s</string>
     <string name="home_chip_to">To: %1$s</string>
     <string name="home_chip_no_model">No model selected</string>
+    <string name="home_chip_network">Network: %1$s</string>
     <string name="home_chip_pending">%1$s · %2$s when downloaded</string>
     <string name="home_needs_more_memory">Needs more memory</string>
     <string name="home_selected">Selected</string>

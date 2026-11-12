@@ -48,6 +48,7 @@
     <string name="home_chip_from">С языка: %1$s</string>
     <string name="home_chip_to">На язык: %1$s</string>
     <string name="home_chip_no_model">Модель не выбрана</string>
+    <string name="home_chip_network">По сети: %1$s</string>
     <string name="home_chip_pending">%1$s · %2$s после загрузки</string>
     <string name="home_needs_more_memory">Нужно больше памяти</string>
     <string name="home_selected">Выбрано</string>

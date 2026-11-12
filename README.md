@@ -7,7 +7,7 @@
 **Read any manga. Offline. In one tap.**
 
 On-device manga and comics translation for Android, from Japanese, Chinese, Korean, Latin-script or Cyrillic-script pages into English, Brazilian Portuguese, Spanish, French, German or Russian.
-Tap once over any manga page, in any app, and read it in your language. Nothing leaves your phone.
+Tap once over any manga page, in any app, and read it in your language. By default nothing leaves your phone.
 
 ![Platform](https://img.shields.io/badge/platform-Android%208.0%2B-3DDC84?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)
@@ -95,7 +95,7 @@ Changes in this fork since it branched from [`artsaraiva/yomu`](https://github.c
 - **Works over any app.** A floating button sits on top of your reader, browser or gallery. Yomu captures the screen only when you tap it.
 - **Six target languages.** English, Brazilian Portuguese, Spanish, French, German or Russian. Switch from settings or the floating button.
 - **Five source families.** Japanese (manga-ocr), Chinese and English, Korean, Latin script and Cyrillic script (PP-OCRv5). The OCR model you pick sets the source.
-- **Fully on-device.** Bubble detection, OCR and translation all run locally. No account, no API key, and no usage after the model download.
+- **On-device by default.** Bubble detection, OCR and translation all run locally. No account, no API key, and no usage after the model download. An optional **Network Model** (Settings > Translation) can translate on your own Ollama, llama.cpp or OpenAI-compatible server instead; only the page text is sent (see [ADR-0022](docs/adr/0022-opt-in-network-model.md)).
 - **Page-level context.** Every bubble on the page goes to the LLM in one call, in reading order, so pronouns and tone hold across a conversation.
 - **Manga-aware typesetting.** Font size and line wrapping are fitted to each bubble's bounds.
 - **Choice of model.** Pick from a curated list of GGUF translation models. Models that won't fit your device's RAM are hidden.

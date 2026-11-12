@@ -32,15 +32,19 @@ import com.yomu.app.ui.theme.*
 import com.yomu.core.TargetLanguage
 
 @Composable
-fun TranslationSettings(viewModel: SettingsViewModel, onBack: () -> Unit) {
+fun TranslationSettings(viewModel: SettingsViewModel, onBack: () -> Unit, networkViewModel: NetworkModelViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
+    val network by networkViewModel.state.collectAsState()
     SettingsPage(stringResource(SettingsSection.Translation.title), stringResource(SettingsSection.Translation.description), onBack) {
         SourceLanguagePanel()
-        TargetLanguagePanel(state.targetLanguage, state::languageUnavailable, viewModel::setTargetLanguage)
+        // The network model writes every language, so the on-device model's limits do not apply while it is in use.
+        TargetLanguagePanel(state.targetLanguage, if (network.active) { _ -> null } else state::languageUnavailable, viewModel::setTargetLanguage)
         state.languageOffer?.let {
             LanguageOfferDialog(it, state.targetLanguage, viewModel::acceptLanguageOffer, viewModel::declineLanguageOffer)
         }
+        BackendPanel(network, networkViewModel::setBackend)
         ModelSlot(state, viewModel, ModelType.LLM, R.string.settings_model_title, R.string.settings_model_description)
+        NetworkModelPanel(network, networkViewModel::setUrl, networkViewModel::setApiKey, networkViewModel::setModel)
         state.recoveryWarning?.let { RecoveryWarning(it) }
         AdvancedGenerationPanel(
             generation = state.generation,

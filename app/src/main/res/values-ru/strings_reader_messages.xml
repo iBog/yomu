@@ -3,5 +3,9 @@
     <string name="reader_failure_english_only">Эта модель пишет только по-английски — выберите многоязычную модель или английский в настройках</string>
     <string name="reader_failure_model_missing">Модель перевода не найдена — скачайте её заново в настройках</string>
     <string name="reader_failure_not_loaded">Не удалось загрузить модель перевода (%1$s)</string>
+    <string name="reader_failure_network_unauthorized">Сервер перевода отклонил API-ключ — проверьте его в «Настройки» → «Перевод»</string>
+    <string name="reader_failure_network_timeout">Сервер перевода слишком долго отвечает</string>
+    <string name="reader_failure_network_unreachable">Не удаётся подключиться к серверу перевода — проверьте адрес в «Настройки» → «Перевод»</string>
+    <string name="reader_failure_network_other">Ошибка сервера перевода (%1$s)</string>
     <string name="reader_untranslated_notice">Не переведено облачков: %1$d из %2$d</string>
 </resources>

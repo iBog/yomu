@@ -398,6 +398,18 @@ class TranslationEngineTest {
     }
 
     @Test
+    fun readerFailure_namesAServerThatFailed() = runTest {
+        val slot = FakeTranslationSlot(PageTranslation(emptyMap(), "", 1L, TranslationOutcome.ERROR, "network_unreachable"))
+        val timeout = FakeTranslationSlot(PageTranslation(emptyMap(), "", 1L, TranslationOutcome.TIMEOUT, "network_timeout"))
+
+        val result = TranslationEngine { slot }.translate(listOf(block(1 to "\u3053\u3093\u306b\u3061\u306f")))
+        val timedOut = TranslationEngine { timeout }.translate(listOf(block(1 to "\u3053\u3093\u306b\u3061\u306f")))
+
+        assertEquals(ReaderFailure.NetworkFailed("network_unreachable"), result.readerFailure())
+        assertEquals(ReaderFailure.NetworkFailed("network_timeout"), timedOut.readerFailure())
+    }
+
+    @Test
     fun readerFailure_isNullForATranslatedPage() = runTest {
         val slot = FakeTranslationSlot(PageTranslation(mapOf(1 to "Hello"), "", 1L))
 

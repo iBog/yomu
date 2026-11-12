@@ -1,6 +1,7 @@
 package com.yomu.app.translation
 
 import android.content.SharedPreferences
+import com.yomu.app.translation.network.NetworkModelStore
 import com.yomu.core.Constants
 import com.yomu.core.GenerationBound
 import com.yomu.core.GenerationParams
@@ -15,12 +16,24 @@ class TranslationModelSelection @Inject constructor(
     private val llamaSlot: LlamaTranslationBridge,
     private val sharedPreferences: SharedPreferences,
     private val llmModelsDir: File = File(""),
-    private val totalMemBytes: Long = 0L
+    private val totalMemBytes: Long = 0L,
+    private val networkSlot: TranslationSlot? = null,
+    private val networkStore: NetworkModelStore? = null
 ) {
     private val generationStore = GenerationProfileStore(sharedPreferences)
     private val limitsStore = ResourceLimitsStore(sharedPreferences)
 
-    fun current(): TranslationSlot = llamaSlot
+    /** The server's slot while the network model is chosen and set up, otherwise the model on the phone. */
+    fun current(): TranslationSlot = if (networkActive()) networkSlot ?: llamaSlot else llamaSlot
+
+    fun networkActive(): Boolean = networkSlot != null && networkStore?.active() == true
+
+    /** The model on the server while the network model is in use, or null. */
+    fun networkModelName(): String? = networkStore?.config()?.model?.takeIf { networkActive() }
+
+    /** Names the model pages are translated with, for the recall key: it changes when the server, the model or the backend does. */
+    fun activeModelKey(): String? = if (networkActive()) networkStore?.config()?.let { "network:${it.url}|${it.model}" }
+    else currentLlmModel().id.takeUnless { llmModelCleared() }
 
     fun currentLlmModel(): LlmModelOption = LlmModelCatalog.selectedOrDefault(sharedPreferences.storedLlmModelId())
 
@@ -95,5 +108,6 @@ class TranslationModelSelection @Inject constructor(
 
     fun close() {
         llamaSlot.close()
+        networkSlot?.close()
     }
 }

@@ -113,7 +113,7 @@ class ModelSlotSelection @Inject constructor(
         pending[type] ?: selectedId(type) ?: ModelManager.SLOT_DEFAULTS.getValue(type)
 
     fun ready(statuses: Map<String, ModelStatus>): Boolean =
-        ModelType.entries.all { type -> selectedId(type)?.let(statuses::get) == ModelStatus.READY }
+        ModelType.entries.all { type -> (type == ModelType.LLM && translation.networkActive()) || selectedId(type)?.let(statuses::get) == ModelStatus.READY }
 
     fun downloadBytes(statuses: Map<String, ModelStatus>): Long = ModelType.entries.sumOf { type ->
         val id = chosenId(type).takeIf { statuses[it] != ModelStatus.READY }
@@ -164,11 +164,15 @@ class ModelSlotSelection @Inject constructor(
 
     fun targetLanguage(): TargetLanguage = languages.load()
 
+    /** Whether pages are translated by the network model, which writes every target language. */
+    fun networkActive(): Boolean = translation.networkActive()
+
     /**
      * Sets [language] unless the translation model in use, or the one waiting to take over, writes English only;
      * then the default is offered instead and nothing changes until [accept].
      */
     suspend fun switchLanguage(language: TargetLanguage): LanguageSwitch {
+        if (translation.networkActive()) return LanguageSwitch.Done.also { languages.save(language) }
         val options = deliverables(ModelType.LLM)
         val englishOnly = listOfNotNull(selectedId(ModelType.LLM), pending[ModelType.LLM])
             .mapNotNull { id -> options.firstOrNull { it.id == id } }
@@ -195,6 +199,7 @@ class ModelSlotSelection @Inject constructor(
 
     /** Why [language] can't be chosen on this device, or null. */
     fun languageUnavailable(language: TargetLanguage, totalMemBytes: Long): UiText? {
+        if (translation.networkActive()) return null
         val budget = fitBudget(totalMemBytes)
         return languageUnavailable(language, deliverables(ModelType.LLM)) { fits(it.id, budget) }
     }
@@ -288,9 +293,7 @@ class ModelSlotSelection @Inject constructor(
             deliverable.slow && fits(deliverable.id, budget)
 
         // Only translation models have a fit budget. Unreadable RAM (0 bytes) leaves only the exempt default (#298).
-        fun fits(id: String, budget: FitBudget): Boolean {
-            val option = LlmModelCatalog.fromId(id) ?: return true
-            return LlmModelCatalog.canRunOnDevice(option, budget)
-        }
+        fun fits(id: String, budget: FitBudget): Boolean =
+            LlmModelCatalog.fromId(id)?.let { LlmModelCatalog.canRunOnDevice(it, budget) } ?: true
     }
 }

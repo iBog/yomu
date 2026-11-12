@@ -8,6 +8,8 @@ import com.yomu.ml.LlamaTranslationBridge
 import com.yomu.ml.OnnxRuntime
 import com.yomu.app.service.ModelManager
 import com.yomu.app.translation.TranslationModelSelection
+import com.yomu.app.translation.network.NetworkModelStore
+import com.yomu.app.translation.network.NetworkTranslationSlot
 import com.yomu.pipeline.TranslationPipeline
 import com.yomu.pipeline.bubble.BubbleDetector
 import com.yomu.pipeline.context.ContextAssembler
@@ -94,9 +96,13 @@ object PipelineModule {
         llamaBridge: LlamaTranslationBridge,
         sharedPreferences: SharedPreferences,
         @ApplicationContext context: Context,
-        modelManager: ModelManager
+        modelManager: ModelManager,
+        networkSlot: NetworkTranslationSlot,
+        networkStore: NetworkModelStore
     ): TranslationModelSelection {
-        return TranslationModelSelection(llamaBridge, sharedPreferences, llmModelsDir(context), modelManager.deviceTotalMemBytes())
+        return TranslationModelSelection(
+            llamaBridge, sharedPreferences, llmModelsDir(context), modelManager.deviceTotalMemBytes(), networkSlot, networkStore
+        )
     }
 
     @Provides

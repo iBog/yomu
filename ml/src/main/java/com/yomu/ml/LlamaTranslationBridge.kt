@@ -73,8 +73,6 @@ class LlamaTranslationBridge(
          */
         private const val MAX_LINE_CHARS = 160
 
-        private val ID_KEYED_LINE = "^\\s*\\[(\\d+)]\\s*(.*)$".toRegex()
-
         private const val TIMEOUT_MS = 15_000
         private const val BATCH_TIMEOUT_MS = 120_000
     }
@@ -188,7 +186,7 @@ class LlamaTranslationBridge(
             if (id in pageIds && byId.putIfAbsent(id, text) == null) onBubble(id, text)
         }
         val output = generate(
-            buildBatchPrompt(page),
+            page.batchPrompt(),
             MAX_BATCH_OUTPUT,
             BATCH_TIMEOUT_MS,
             buildBatchGrammar(page),
@@ -254,17 +252,6 @@ class LlamaTranslationBridge(
             "Please translate the $following text into $to:\n\n\n${target.trim()}"
     }
 
-    private fun buildBatchPrompt(page: TranslatablePage): String = buildString {
-        appendLine(
-            "Translate each ${page.spoken.promptPrefix()}line to ${page.targetLanguage.promptName}. Keep the [id] tag before each line. " +
-                "Panels are separated by ---."
-        )
-        page.panels.forEachIndexed { index, panel ->
-            if (index > 0) appendLine("---")
-            panel.forEach { bubble -> appendLine("[${bubble.bubbleId}] ${bubble.sourceText}") }
-        }
-    }
-
     /**
      * GBNF pinning the reply to exactly one `[id] text` line per bubble, in prompt order, with the
      * ids as literals. Two rules regardless of bubble count. Preamble, refusal, a dropped id, a
@@ -282,12 +269,6 @@ class LlamaTranslationBridge(
         val excluded = if (profile.generation.lineExcludesIdBracket) "\\r\\n\\[" else "\\r\\n"
         val longestSource = page.panels.flatten().maxOfOrNull { it.sourceText.length } ?: 0
         return "root ::= $root\nline ::= [^$excluded]{1,${maxOf(MAX_LINE_CHARS, 2 * longestSource)}}\n"
-    }
-
-    private fun parseIdKeyedLine(line: String): Pair<Int, String>? {
-        val match = ID_KEYED_LINE.matchEntire(line) ?: return null
-        val id = match.groupValues[1].toIntOrNull() ?: return null
-        return id to match.groupValues[2].trim()
     }
 
     /**
@@ -378,6 +359,3 @@ class LlamaTranslationBridge(
         val endedByModel: Boolean = false
     )
 }
-
-/** The source named before a noun in a prompt, "Korean ", or nothing for Auto. */
-private fun SpokenLanguage?.promptPrefix(): String = this?.let { "${it.promptName} " }.orEmpty()

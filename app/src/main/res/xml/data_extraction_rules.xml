@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and newer: the network model's API key stays out of cloud backups and device transfers. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="yomu_network_secret.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="yomu_network_secret.xml" />
+    </device-transfer>
+</data-extraction-rules>
