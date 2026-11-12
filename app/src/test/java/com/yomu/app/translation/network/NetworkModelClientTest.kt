@@ -48,8 +48,18 @@ class NetworkModelClientTest {
 
         val result = client.listModels("http://h:1", "")
 
-        assertEquals(ModelsResult.Listed(listOf("qwen2.5:7b", "gemma3")), result)
+        assertEquals(ModelsResult.Listed(listOf("gemma3", "qwen2.5:7b")), result)
         assertEquals("http://h:1/v1/models", requests.single().url.toString())
+    }
+
+    @Test
+    fun `the models are listed alphabetically, ignoring case, without repeats`() = runTest {
+        handler = { 200 to """{"data":[{"id":"qwen3:8b"},{"id":"Llama3"},{"id":"gemma3"},{"id":"qwen3:8b"},{"id":"deepseek-r1"}]}""" }
+
+        assertEquals(
+            ModelsResult.Listed(listOf("deepseek-r1", "gemma3", "Llama3", "qwen3:8b")),
+            client.listModels("http://h:1", "")
+        )
     }
 
     @Test

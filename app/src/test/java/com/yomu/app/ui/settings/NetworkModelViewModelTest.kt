@@ -60,7 +60,7 @@ class NetworkModelViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, asked)
-        assertEquals(ModelsState.Listed(listOf("qwen", "gemma")), viewModel.state.value.models)
+        assertEquals(ModelsState.Listed(listOf("gemma", "qwen")), viewModel.state.value.models)
     }
 
     @Test
@@ -133,7 +133,7 @@ class NetworkModelViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, asked)
-        assertEquals(ModelsState.Listed(listOf("qwen", "gemma")), viewModel.state.value.models)
+        assertEquals(ModelsState.Listed(listOf("gemma", "qwen")), viewModel.state.value.models)
     }
 }
 

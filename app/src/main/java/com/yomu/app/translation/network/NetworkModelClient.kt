@@ -81,7 +81,7 @@ class NetworkModelClient @Inject constructor(http: OkHttpClient) {
             answered = true
             if (reply.code == 401 || reply.code == 403) return ModelsResult.Failed(NETWORK_UNAUTHORIZED)
             val models = if (reply.code == 200) modelNames(reply.body) else emptyList()
-            if (models.isNotEmpty()) return ModelsResult.Listed(models)
+            if (models.isNotEmpty()) return ModelsResult.Listed(models.distinct().sortedWith(String.CASE_INSENSITIVE_ORDER))
         }
         return if (answered) ModelsResult.Unlisted else ModelsResult.Failed(NETWORK_UNREACHABLE)
     }
