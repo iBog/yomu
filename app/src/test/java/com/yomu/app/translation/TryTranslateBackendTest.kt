@@ -76,6 +76,20 @@ class TryTranslateBackendTest {
     }
 
     @Test
+    fun `a whole page of bubbles goes in one chat request, each as its own tagged line`() = runTest {
+        chooseNetwork()
+        content = "[0] Раз\n[1] Два\n[2] Три"
+
+        val result = pipeline.translateLines(listOf("One", "Two", "Three"), TargetLanguage.RUSSIAN, null, emptyList())
+
+        val chats = requests.filter { it.url.encodedPath == "/v1/chat/completions" }
+        assertEquals(1, chats.size)
+        val sent = okio.Buffer().also { chats.single().body!!.writeTo(it) }.readUtf8()
+        assertTrue(sent, sent.contains("[0] One") && sent.contains("[1] Two") && sent.contains("[2] Three"))
+        assertEquals(listOf("Раз", "Два", "Три"), result.translations.map { it.translatedText })
+    }
+
+    @Test
     fun `Auto leaves the source out of what the server is asked`() = runTest {
         chooseNetwork()
 
