@@ -14,8 +14,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // The release workflow passes both from the tag (#405); local builds keep the defaults.
-        versionCode = (findProperty("yomu.versionCode") as String?)?.toInt() ?: 401
-        versionName = findProperty("yomu.versionName") as String? ?: "0.4.1"
+        versionCode = (findProperty("yomu.versionCode") as String?)?.toInt() ?: 402
+        versionName = findProperty("yomu.versionName") as String? ?: "0.4.2"
         testInstrumentationRunner = "com.yomu.app.CustomTestRunner"
         vectorDrawables { useSupportLibrary = true }
     }
