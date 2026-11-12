@@ -25,6 +25,7 @@ import com.yomu.app.R
 import com.yomu.app.db.entities.ModelType
 import com.yomu.app.detection.DetectionThresholdStore
 import com.yomu.app.service.TriggerMode
+import com.yomu.app.translation.network.TranslationBackend
 import com.yomu.app.ui.UiText
 import com.yomu.app.ui.asString
 import com.yomu.app.ui.labelRes
@@ -43,16 +44,22 @@ fun TranslationSettings(viewModel: SettingsViewModel, onBack: () -> Unit, networ
             LanguageOfferDialog(it, state.targetLanguage, viewModel::acceptLanguageOffer, viewModel::declineLanguageOffer)
         }
         BackendPanel(network, networkViewModel::setBackend)
-        ModelSlot(state, viewModel, ModelType.LLM, R.string.settings_model_title, R.string.settings_model_description)
-        NetworkModelPanel(network, networkViewModel::setUrl, networkViewModel::setApiKey, networkViewModel::setModel)
-        state.recoveryWarning?.let { RecoveryWarning(it) }
-        AdvancedGenerationPanel(
-            generation = state.generation,
-            defaults = state.generationDefaults,
-            overridden = state.generationOverridden,
-            onChange = viewModel::setGeneration,
-            onReset = viewModel::resetGeneration
+        Dimmed(network.active) { ModelSlot(state, viewModel, ModelType.LLM, R.string.settings_model_title, R.string.settings_model_description) }
+        // Open while it is being set up, so the choice above is never out of reach; once it is set up, only the chosen one is editable.
+        NetworkModelPanel(
+            network, networkViewModel::setUrl, networkViewModel::setApiKey, networkViewModel::setModel,
+            enabled = network.backend == TranslationBackend.NETWORK || !network.ready
         )
+        state.recoveryWarning?.let { RecoveryWarning(it) }
+        Dimmed(network.active) {
+            AdvancedGenerationPanel(
+                generation = state.generation,
+                defaults = state.generationDefaults,
+                overridden = state.generationOverridden,
+                onChange = viewModel::setGeneration,
+                onReset = viewModel::resetGeneration
+            )
+        }
         PageRecallPanel(state.pageRecall, viewModel::setPageRecall)
         SaveHistoryPanel()
     }
@@ -67,29 +74,12 @@ private fun TargetLanguagePanel(
     PaperSurface(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             SettingRow(stringResource(R.string.settings_target_language_title), stringResource(R.string.settings_target_language_description)) {
-                Column(Modifier.selectableGroup()) {
-                    TargetLanguage.entries.forEach { language ->
-                        val reason = unavailable(language)
-                        Row(
-                            Modifier.fillMaxWidth().selectable(
-                                language == selected, enabled = reason == null, role = Role.RadioButton, onClick = { onChange(language) }
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = language == selected, onClick = null, enabled = reason == null)
-                            Column {
-                                Text(
-                                    stringResource(language.labelRes()),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (reason == null) LocalContentColor.current else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                reason?.let {
-                                    Text(it.asString(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                        }
-                    }
-                }
+                CompactDropdown(
+                    selectedLabel = stringResource(selected.labelRes()),
+                    options = TargetLanguage.entries.map { DropdownOption(it, stringResource(it.labelRes()), unavailable(it)?.asString()) },
+                    isSelected = { it == selected },
+                    onPick = onChange
+                )
             }
         }
     }

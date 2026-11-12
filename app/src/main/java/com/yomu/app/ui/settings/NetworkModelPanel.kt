@@ -1,7 +1,6 @@
 package com.yomu.app.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,22 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -79,7 +70,9 @@ internal fun NetworkModelPanel(
     state: NetworkUiState,
     onUrl: (String) -> Unit,
     onApiKey: (String) -> Unit,
-    onModel: (String) -> Unit
+    onModel: (String) -> Unit,
+    /** False while the model on the phone is the one in use and the network model is already set up: change the choice above first. */
+    enabled: Boolean = true
 ) {
     PaperSurface(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -96,6 +89,7 @@ internal fun NetworkModelPanel(
                 label = { Text(stringResource(R.string.settings_network_url)) },
                 placeholder = { Text(stringResource(R.string.settings_network_url_hint)) },
                 singleLine = true,
+                enabled = enabled,
                 isError = failure != null,
                 trailingIcon = if (state.models.answered) ({ AnsweredMark() }) else null,
                 supportingText = failure?.let { { Text(stringResource(networkFailureRes(it), it)) } },
@@ -107,19 +101,21 @@ internal fun NetworkModelPanel(
                 onValueChange = onApiKey,
                 label = { Text(stringResource(R.string.settings_network_key)) },
                 singleLine = true,
+                enabled = enabled,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth()
             )
             when (val models = state.models) {
                 ModelsState.Loading -> Text(stringResource(R.string.settings_network_models_loading), style = MaterialTheme.typography.bodySmall)
-                is ModelsState.Listed -> ModelDropdown(models.models, state.model, onModel)
+                is ModelsState.Listed -> ModelDropdown(models.models, state.model, onModel, enabled)
                 ModelsState.Manual -> OutlinedTextField(
                     value = state.model,
                     onValueChange = onModel,
                     label = { Text(stringResource(R.string.settings_network_model_name)) },
                     supportingText = { Text(stringResource(R.string.settings_network_models_manual_hint)) },
                     singleLine = true,
+                    enabled = enabled,
                     modifier = Modifier.fillMaxWidth()
                 )
                 else -> Unit
@@ -137,25 +133,16 @@ private fun AnsweredMark() {
 private val ANSWERED_GREEN = Color(0xFF2E7D32)
 
 @Composable
-private fun ModelDropdown(models: List<String>, selected: String, onPick: (String) -> Unit) {
-    var open by remember { mutableStateOf(false) }
+private fun ModelDropdown(models: List<String>, selected: String, onPick: (String) -> Unit, enabled: Boolean) {
     Column {
         Text(stringResource(R.string.settings_network_model), style = MaterialTheme.typography.labelMedium)
-        Box {
-            AssistChip(
-                onClick = { open = true },
-                label = { Text(selected.ifBlank { stringResource(R.string.settings_network_model_choose) }) },
-                trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
-            )
-            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                models.forEach { model ->
-                    DropdownMenuItem(text = { Text(model) }, onClick = {
-                        open = false
-                        onPick(model)
-                    })
-                }
-            }
-        }
+        CompactDropdown(
+            selectedLabel = selected.ifBlank { stringResource(R.string.settings_network_model_choose) },
+            options = models.map { DropdownOption(it, it) },
+            isSelected = { it == selected },
+            onPick = onPick,
+            enabled = enabled
+        )
     }
 }
 

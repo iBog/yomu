@@ -53,7 +53,7 @@ class TryTranslateViewModel @Inject constructor(
         _state.value = TryState(running = true)
         job = viewModelScope.launch {
             _state.value = try {
-                pipeline.translateLines(text.lines(), target, spoken, NameGlossaryStore(sharedPreferences).load()).toTryState()
+                pipeline.translateLines(text.lines(), target, spoken, NameGlossaryStore(sharedPreferences).entriesInUse()).toTryState()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {

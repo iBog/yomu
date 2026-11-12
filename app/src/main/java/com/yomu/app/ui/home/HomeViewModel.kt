@@ -20,6 +20,7 @@ import com.yomu.app.ui.UiText
 import com.yomu.app.service.OverlayService
 import com.yomu.app.service.TriggerModeStore
 import com.yomu.app.translation.network.NetworkModelStore
+import com.yomu.core.Constants
 import com.yomu.core.TargetLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -44,7 +45,16 @@ class HomeViewModel @Inject constructor(
     private val sourceLanguage: SourceLanguageSelection,
     private val networkStore: NetworkModelStore
 ) : ViewModel() {
+    // Held in a field: SharedPreferences keeps listeners weakly. Settings changes what Home reports without Home resuming.
+    private val selectionListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key in SELECTION_KEYS) _uiState.update { it.withSlots() }
+    }
+
     private companion object {
+        val SELECTION_KEYS = setOf(
+            NetworkModelStore.KEY_BACKEND, NetworkModelStore.KEY_URL, NetworkModelStore.KEY_MODEL,
+            Constants.PREF_SPOKEN_LANGUAGE, Constants.PREF_TARGET_LANGUAGE, Constants.PREF_LLM_MODEL
+        )
         const val SETUP_COMPLETE = "reading_setup_complete"
         const val HAS_READ = "has_read"
         val DOWNLOAD_LABELS = mapOf(
@@ -68,6 +78,7 @@ class HomeViewModel @Inject constructor(
     private val serviceStateReceiver = ServiceStateReceiver(_uiState::update)
 
     init {
+        sharedPreferences.registerOnSharedPreferenceChangeListener(selectionListener)
         ContextCompat.registerReceiver(context, serviceStateReceiver, IntentFilter().apply {
             addAction(OverlayService.ACTION_SERVICE_STARTED)
             addAction(OverlayService.ACTION_SERVICE_STOPPED)
@@ -276,6 +287,7 @@ class HomeViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(selectionListener)
         context.unregisterReceiver(serviceStateReceiver)
         super.onCleared()
     }
