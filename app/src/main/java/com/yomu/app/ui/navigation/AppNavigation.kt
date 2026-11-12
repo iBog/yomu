@@ -37,6 +37,7 @@ import com.yomu.app.ui.theme.PaperLoading
 import com.yomu.app.ui.home.HomeScreen
 import androidx.navigation.compose.navigation
 import com.yomu.app.ui.settings.AppearanceSettings
+import com.yomu.app.ui.settings.ProvidersSettings
 import com.yomu.app.ui.settings.PerformanceSettings
 import com.yomu.app.ui.settings.PipelineSettings
 import com.yomu.app.ui.settings.SettingsScreen
@@ -157,6 +158,7 @@ fun AppNavigation(
                                 SettingsSection.Typesetting -> TypesettingSettings(settings, onBack)
                                 SettingsSection.Performance -> PerformanceSettings(settings, onBack)
                                 SettingsSection.Appearance -> AppearanceSettings(settings, hiltViewModel(), onBack)
+                                SettingsSection.Providers -> ProvidersSettings(onBack)
                             }
                         }
                     }

@@ -43,7 +43,6 @@ fun TranslationSettings(viewModel: SettingsViewModel, onBack: () -> Unit, networ
         state.languageOffer?.let {
             LanguageOfferDialog(it, state.targetLanguage, viewModel::acceptLanguageOffer, viewModel::declineLanguageOffer)
         }
-        BackendPanel(network, networkViewModel::setBackend)
         Dimmed(network.active) { ModelSlot(state, viewModel, ModelType.LLM, R.string.settings_model_title, R.string.settings_model_description) }
         // Open while it is being set up, so the choice above is never out of reach; once it is set up, only the chosen one is editable.
         NetworkModelPanel(

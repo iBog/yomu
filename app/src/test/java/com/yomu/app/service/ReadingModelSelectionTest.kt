@@ -4,6 +4,7 @@ import com.yomu.app.db.entities.ModelType
 import com.yomu.app.translation.MapSharedPreferences
 import com.yomu.core.Constants
 import com.yomu.core.SourceLanguage
+import com.yomu.core.SpokenLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -78,6 +79,26 @@ class ReadingModelSelectionTest {
     @Test
     fun `every script has the OCR model that reads it`() {
         SourceLanguage.entries.forEach { assertEquals(it, ReadingModelSelection.sourceOf(ReadingModelSelection.ocrModelFor(it))) }
+    }
+
+    @Test
+    fun `each source language picks the OCR model that reads its script`() {
+        val expected = mapOf(
+            SpokenLanguage.JAPANESE to Constants.MANGA_OCR_MODEL_ID,
+            SpokenLanguage.CHINESE to Constants.PPOCR_CHINESE_MODEL_ID,
+            SpokenLanguage.KOREAN to Constants.PPOCR_KOREAN_MODEL_ID,
+            SpokenLanguage.ENGLISH to Constants.PPOCR_LATIN_MODEL_ID,
+            SpokenLanguage.SPANISH to Constants.PPOCR_LATIN_MODEL_ID,
+            SpokenLanguage.FRENCH to Constants.PPOCR_LATIN_MODEL_ID,
+            SpokenLanguage.GERMAN to Constants.PPOCR_LATIN_MODEL_ID,
+            SpokenLanguage.ITALIAN to Constants.PPOCR_LATIN_MODEL_ID,
+            SpokenLanguage.PORTUGUESE to Constants.PPOCR_LATIN_MODEL_ID,
+            SpokenLanguage.RUSSIAN to Constants.PPOCR_CYRILLIC_MODEL_ID,
+            SpokenLanguage.UKRAINIAN to Constants.PPOCR_CYRILLIC_MODEL_ID
+        )
+
+        assertEquals(SpokenLanguage.entries.toSet(), expected.keys)
+        expected.forEach { (language, id) -> assertEquals(language.name, id, ReadingModelSelection.ocrModelFor(language.script)) }
     }
 
     @Test

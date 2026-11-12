@@ -2,67 +2,24 @@ package com.yomu.app.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.yomu.app.R
-import com.yomu.app.translation.network.TranslationBackend
 import com.yomu.app.ui.theme.PaperSurface
-
-/** Which engine translates: the model on the phone or the Network Model. The network one needs an address and a model first. */
-@Composable
-internal fun BackendPanel(state: NetworkUiState, onChoose: (TranslationBackend) -> Unit) {
-    PaperSurface(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            SettingRow(stringResource(R.string.settings_backend_title), stringResource(R.string.settings_backend_description)) {
-                Column(Modifier.selectableGroup()) {
-                    BackendRow(R.string.settings_backend_device, null, state.backend == TranslationBackend.DEVICE, true) {
-                        onChoose(TranslationBackend.DEVICE)
-                    }
-                    BackendRow(
-                        R.string.settings_backend_network,
-                        R.string.settings_backend_network_unset.takeIf { !state.ready },
-                        state.backend == TranslationBackend.NETWORK,
-                        state.ready
-                    ) { onChoose(TranslationBackend.NETWORK) }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BackendRow(label: Int, note: Int?, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(selected = selected, onClick = null, enabled = enabled)
-        Column(Modifier.padding(start = 8.dp, top = 8.dp, bottom = 8.dp)) {
-            Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
-            note?.let { Text(stringResource(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        }
-    }
-}
 
 /** The server's address, an optional key, and the model: picked from the server's list, or typed when it has none. */
 @Composable

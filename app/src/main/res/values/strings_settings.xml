@@ -16,8 +16,14 @@
     <string name="settings_section_performance_description">What translation costs this phone, and how much the model may use.</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_appearance_description">How Yomu looks and where you start a translation.</string>
-    <string name="settings_providers">Providers</string>
-    <string name="settings_providers_coming_soon">Coming soon</string>
+    <string name="settings_section_providers">Providers</string>
+    <string name="settings_section_providers_description">What translates a page: the model on this phone or a server.</string>
+    <string name="settings_backend_network_unset">Set a server and a model in Settings &gt; Translation first.</string>
+    <string name="settings_source_ocr_auto">Auto keeps the reading model: %1$s.</string>
+    <string name="settings_source_ocr_language">Reading model for %1$s: %2$s.</string>
+    <string name="settings_source_ocr_pending">The reading model switches to %1$s once it is downloaded; for now: %2$s.</string>
+    <string name="settings_source_ocr_mismatch">The reading model chosen in Pipeline, %1$s, doesn\'t read %2$s, so the source is treated as Auto.</string>
+    <string name="settings_source_ocr_none">No reading model is selected.</string>
     <string name="settings_about">About</string>
     <string name="settings_about_version">Yomu v%1$s</string>
 
@@ -31,7 +37,6 @@
     <string name="settings_backend_description">The model on this phone, or a server on your network.</string>
     <string name="settings_backend_device">On Device Model</string>
     <string name="settings_backend_network">Network Model</string>
-    <string name="settings_backend_network_unset">Add a server and a model in Network Model below first.</string>
     <string name="settings_network_title">Network Model</string>
     <string name="settings_network_description">Translate on a server instead of this phone: Ollama, llama.cpp or any OpenAI-compatible API. The text of every page is sent to it.</string>
     <string name="settings_network_url">Server URL</string>

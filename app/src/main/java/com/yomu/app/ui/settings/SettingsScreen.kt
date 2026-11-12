@@ -24,7 +24,8 @@ enum class SettingsSection(val route: String, @StringRes val title: Int, @String
     Pipeline("settings/pipeline", R.string.settings_section_pipeline, R.string.settings_section_pipeline_description),
     Typesetting("settings/typesetting", R.string.settings_section_typesetting, R.string.settings_section_typesetting_description),
     Performance("settings/performance", R.string.settings_section_performance, R.string.settings_section_performance_description),
-    Appearance("settings/appearance", R.string.settings_section_appearance, R.string.settings_section_appearance_description)
+    Appearance("settings/appearance", R.string.settings_section_appearance, R.string.settings_section_appearance_description),
+    Providers("settings/providers", R.string.settings_section_providers, R.string.settings_section_providers_description)
 }
 
 @Composable
@@ -37,7 +38,6 @@ fun SettingsScreen(onOpen: (SettingsSection) -> Unit) {
                 SettingsSection.entries.forEach { section ->
                     SettingsEntry(stringResource(section.title), stringResource(section.description), onClick = { onOpen(section) })
                 }
-                SettingsEntry(stringResource(R.string.settings_providers), stringResource(R.string.settings_providers_coming_soon), enabled = false)
                 SettingsEntry(stringResource(R.string.settings_about), stringResource(R.string.settings_about_version, version))
             }
         }
