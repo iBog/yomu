@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -20,8 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.yomu.app.R
+import com.yomu.app.db.entities.ModelType
 import com.yomu.app.translation.network.NetworkModelStore
 import com.yomu.app.translation.network.TranslationBackend
+import com.yomu.app.ui.theme.PaperAction
 import com.yomu.app.ui.theme.PaperSurface
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +35,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 /** Which engine translates, and whether the network one has an address and a model to be chosen. */
-data class BackendState(val backend: TranslationBackend, val networkReady: Boolean)
+data class BackendState(val backend: TranslationBackend, val networkReady: Boolean) {
+    /** Whether pages go to the server: chosen, and set up. */
+    val active: Boolean get() = backend == TranslationBackend.NETWORK && networkReady
+}
 
 @HiltViewModel
 class BackendViewModel @Inject constructor(private val store: NetworkModelStore) : ViewModel() {
@@ -45,12 +53,37 @@ class BackendViewModel @Inject constructor(private val store: NetworkModelStore)
     private fun read() = BackendState(store.backend(), store.config().complete)
 }
 
-/** Providers: what translates a page. The network model itself is set up in Settings > Translation. */
+/** Providers: what translates a page, and its models: the one on the phone or the one on a server. */
 @Composable
-fun ProvidersSettings(onBack: () -> Unit, viewModel: BackendViewModel = hiltViewModel()) {
-    val state by viewModel.state.collectAsState()
+fun ProvidersSettings(settings: SettingsViewModel, onBack: () -> Unit, networkViewModel: NetworkModelViewModel = hiltViewModel()) {
+    val state by settings.uiState.collectAsState()
+    val network by networkViewModel.state.collectAsState()
     SettingsPage(stringResource(SettingsSection.Providers.title), stringResource(SettingsSection.Providers.description), onBack) {
-        BackendPanel(state, viewModel::choose)
+        BackendPanel(BackendState(network.backend, network.ready), networkViewModel::setBackend)
+        Dimmed(network.active) { ModelSlot(state, settings, ModelType.LLM, R.string.settings_model_title, R.string.settings_model_description) }
+        // Open while it is being set up, so the choice above is never out of reach; once it is set up, only the chosen one is editable.
+        NetworkModelPanel(
+            network, networkViewModel::setUrl, networkViewModel::setApiKey, networkViewModel::setModel,
+            enabled = network.backend == TranslationBackend.NETWORK || !network.ready
+        )
+    }
+}
+
+/** Where the translation models went: Translation only points to Providers. */
+@Composable
+internal fun ModelsHint(onOpenProviders: () -> Unit) {
+    PaperAction(onClick = onOpenProviders, modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_models_moved_title), style = MaterialTheme.typography.titleSmall)
+                Text(
+                    stringResource(R.string.settings_models_moved_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null)
+        }
     }
 }
 

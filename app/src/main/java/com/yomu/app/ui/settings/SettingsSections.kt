@@ -25,7 +25,6 @@ import com.yomu.app.R
 import com.yomu.app.db.entities.ModelType
 import com.yomu.app.detection.DetectionThresholdStore
 import com.yomu.app.service.TriggerMode
-import com.yomu.app.translation.network.TranslationBackend
 import com.yomu.app.ui.UiText
 import com.yomu.app.ui.asString
 import com.yomu.app.ui.labelRes
@@ -33,24 +32,24 @@ import com.yomu.app.ui.theme.*
 import com.yomu.core.TargetLanguage
 
 @Composable
-fun TranslationSettings(viewModel: SettingsViewModel, onBack: () -> Unit, networkViewModel: NetworkModelViewModel = hiltViewModel()) {
+fun TranslationSettings(
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
+    onOpenProviders: () -> Unit,
+    backendViewModel: BackendViewModel = hiltViewModel()
+) {
     val state by viewModel.uiState.collectAsState()
-    val network by networkViewModel.state.collectAsState()
+    val backend by backendViewModel.state.collectAsState()
     SettingsPage(stringResource(SettingsSection.Translation.title), stringResource(SettingsSection.Translation.description), onBack) {
         SourceLanguagePanel()
         // The network model writes every language, so the on-device model's limits do not apply while it is in use.
-        TargetLanguagePanel(state.targetLanguage, if (network.active) { _ -> null } else state::languageUnavailable, viewModel::setTargetLanguage)
+        TargetLanguagePanel(state.targetLanguage, if (backend.active) { _ -> null } else state::languageUnavailable, viewModel::setTargetLanguage)
         state.languageOffer?.let {
             LanguageOfferDialog(it, state.targetLanguage, viewModel::acceptLanguageOffer, viewModel::declineLanguageOffer)
         }
-        Dimmed(network.active) { ModelSlot(state, viewModel, ModelType.LLM, R.string.settings_model_title, R.string.settings_model_description) }
-        // Open while it is being set up, so the choice above is never out of reach; once it is set up, only the chosen one is editable.
-        NetworkModelPanel(
-            network, networkViewModel::setUrl, networkViewModel::setApiKey, networkViewModel::setModel,
-            enabled = network.backend == TranslationBackend.NETWORK || !network.ready
-        )
+        ModelsHint(onOpenProviders)
         state.recoveryWarning?.let { RecoveryWarning(it) }
-        Dimmed(network.active) {
+        Dimmed(backend.active) {
             AdvancedGenerationPanel(
                 generation = state.generation,
                 defaults = state.generationDefaults,
@@ -149,7 +148,7 @@ private fun DetectionThresholdPanel(stored: Float, onChange: (Float) -> Unit, on
 }
 
 @Composable
-private fun ModelSlot(state: SettingsUiState, viewModel: SettingsViewModel, type: ModelType, @StringRes title: Int, @StringRes description: Int) {
+internal fun ModelSlot(state: SettingsUiState, viewModel: SettingsViewModel, type: ModelType, @StringRes title: Int, @StringRes description: Int) {
     SlotPicker(
         title = stringResource(title),
         description = stringResource(description),

@@ -152,13 +152,16 @@ fun AppNavigation(
                             val settings: SettingsViewModel = hiltViewModel(parent)
                             val onBack: () -> Unit = { navController.popBackStack() }
                             when (section) {
-                                SettingsSection.Translation -> TranslationSettings(settings, onBack)
+                                SettingsSection.Translation -> TranslationSettings(
+                                    settings, onBack,
+                                    onOpenProviders = { navController.navigate(SettingsSection.Providers.route) { launchSingleTop = true } }
+                                )
                                 SettingsSection.NameGlossary -> NameGlossarySettings(hiltViewModel(), onBack)
                                 SettingsSection.Pipeline -> PipelineSettings(settings, onBack)
                                 SettingsSection.Typesetting -> TypesettingSettings(settings, onBack)
                                 SettingsSection.Performance -> PerformanceSettings(settings, onBack)
                                 SettingsSection.Appearance -> AppearanceSettings(settings, hiltViewModel(), onBack)
-                                SettingsSection.Providers -> ProvidersSettings(onBack)
+                                SettingsSection.Providers -> ProvidersSettings(settings, onBack)
                             }
                         }
                     }

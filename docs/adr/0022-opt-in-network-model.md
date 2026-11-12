@@ -2,7 +2,7 @@
 
 **Status:** accepted for this fork, 2026-11-12. Revises [ADR-0018](0018-translation-stays-on-the-phone.md), whose Considered Options rejected "a translator on the reader's own hardware ... reached over the local network ... for now".
 
-Settings > Translation gets a **Network Model** beside the **On Device Model**. The reader gives a server address (an Ollama or llama.cpp server on their own network, or any OpenAI-compatible API), an optional API key and a model, and chooses which of the two translates. Nothing changes until they choose it: the on-device model is the default, and a fresh install never contacts a server.
+Settings > Providers holds the **On Device Model** and a **Network Model** beside it. The reader gives a server address (an Ollama or llama.cpp server on their own network, or any OpenAI-compatible API), an optional API key and a model, and chooses which of the two translates. Nothing changes until they choose it: the on-device model is the default, and a fresh install never contacts a server.
 
 ## What it does
 

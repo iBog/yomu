@@ -3,9 +3,9 @@
     <string name="reader_failure_english_only">This model is English only — pick a Multilingual model or English in Settings</string>
     <string name="reader_failure_model_missing">Translation model is missing — download it again in Settings</string>
     <string name="reader_failure_not_loaded">Translation model could not be loaded (%1$s)</string>
-    <string name="reader_failure_network_unauthorized">The translation server rejected the API key — check it in Settings &gt; Translation</string>
+    <string name="reader_failure_network_unauthorized">The translation server rejected the API key — check it in Settings &gt; Providers</string>
     <string name="reader_failure_network_timeout">The translation server took too long to answer</string>
-    <string name="reader_failure_network_unreachable">Can\'t reach the translation server — check its address in Settings &gt; Translation</string>
+    <string name="reader_failure_network_unreachable">Can\'t reach the translation server — check its address in Settings &gt; Providers</string>
     <string name="reader_failure_network_other">The translation server failed (%1$s)</string>
     <string name="reader_untranslated_notice">%1$d of %2$d bubbles not translated</string>
 </resources>

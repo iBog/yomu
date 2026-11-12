@@ -17,8 +17,10 @@
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_appearance_description">Как выглядит Yomu и откуда запускается перевод.</string>
     <string name="settings_section_providers">Провайдеры</string>
-    <string name="settings_section_providers_description">Чем переводится страница: моделью на этом телефоне или сервером.</string>
-    <string name="settings_backend_network_unset">Сначала укажите сервер и модель в «Настройки» → «Перевод».</string>
+    <string name="settings_section_providers_description">Чем переводится страница и какие для этого модели: на этом телефоне или на сервере.</string>
+    <string name="settings_backend_network_unset">Сначала укажите сервер и модель в разделе «Сетевая модель» ниже.</string>
+    <string name="settings_models_moved_title">Модели перевода</string>
+    <string name="settings_models_moved_description">Выбор и настройка модели на телефоне или сетевой модели — в «Настройки» → «Провайдеры».</string>
     <string name="settings_source_ocr_auto">«Авто» оставляет модель чтения: %1$s.</string>
     <string name="settings_source_ocr_language">Модель чтения для языка «%1$s»: %2$s.</string>
     <string name="settings_source_ocr_pending">Модель чтения сменится на %1$s после скачивания; пока используется: %2$s.</string>

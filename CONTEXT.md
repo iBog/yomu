@@ -75,7 +75,7 @@ What the reader says a page is written in, chosen on Home: Auto, or one of the l
 _Avoid_: input language, original language
 
 **Network model**:
-A translation model that runs on a server the reader sets up (Ollama, llama.cpp or an OpenAI-compatible API) instead of on the phone, chosen in Settings > Translation beside the on-device model. Only the text of each page is sent; detection and OCR stay on the phone. Off until the reader chooses it, and it writes every [[target language]].
+A translation model that runs on a server the reader sets up (Ollama, llama.cpp or an OpenAI-compatible API) instead of on the phone, chosen in Settings > Providers beside the on-device model. Only the text of each page is sent; detection and OCR stay on the phone. Off until the reader chooses it, and it writes every [[target language]].
 _Avoid_: cloud translator, remote model, API model
 
 **Target language**:

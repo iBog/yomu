@@ -17,8 +17,10 @@
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_appearance_description">How Yomu looks and where you start a translation.</string>
     <string name="settings_section_providers">Providers</string>
-    <string name="settings_section_providers_description">What translates a page: the model on this phone or a server.</string>
-    <string name="settings_backend_network_unset">Set a server and a model in Settings &gt; Translation first.</string>
+    <string name="settings_section_providers_description">What translates a page, and its models: on this phone or on a server.</string>
+    <string name="settings_backend_network_unset">Set a server and a model in Network Model below first.</string>
+    <string name="settings_models_moved_title">Translation models</string>
+    <string name="settings_models_moved_description">Choose and set up the model on this phone or a network model in Settings &gt; Providers.</string>
     <string name="settings_source_ocr_auto">Auto keeps the reading model: %1$s.</string>
     <string name="settings_source_ocr_language">Reading model for %1$s: %2$s.</string>
     <string name="settings_source_ocr_pending">The reading model switches to %1$s once it is downloaded; for now: %2$s.</string>
