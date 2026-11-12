@@ -1,6 +1,6 @@
 # Yomu keeps the incumbent YOLO26n bubble/text detector
 
-> **Revised in part by [ADR-0020](0020-selectable-text-detector.md).** YOLO26n stays the default, and the detection slot also offers ogkalu's RT-DETR text detector as Experimental, because YOLO26n misses text in rectangular captions.
+> **Revised in part by [ADR-0020](0020-selectable-text-detector.md).** The detection slot offers ogkalu's RT-DETR text detector beside YOLO26n, because YOLO26n misses text in rectangular captions; RT-DETR is now the default (see the amendment there), and YOLO26n stays selectable.
 
 > **AGPL clearance resolved by [ADR-0019](0019-yomu-is-agpl-open-source.md).** Yomu is published under AGPL-3.0, which meets the YOLO26 base's terms. The "Per ADR-0001, Yomu ships closed-source" premise below no longer holds, and neither the Enterprise licence nor a retrained detector is needed for licensing.
 

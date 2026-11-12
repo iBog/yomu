@@ -97,8 +97,7 @@ class ModelSlotSelection @Inject constructor(
                 it.id,
                 it.name,
                 it.fileSize + ModelManager.additionalFiles(it.id).sumOf { file -> file.size },
-                READING_LICENCES.getValue(it.id),
-                experimental = it.id in EXPERIMENTAL_READING
+                READING_LICENCES.getValue(it.id)
             )
         }
     }
@@ -273,9 +272,6 @@ class ModelSlotSelection @Inject constructor(
             Constants.PPOCR_LATIN_MODEL_ID to PPOCR_LICENCE,
             Constants.PPOCR_CYRILLIC_MODEL_ID to PPOCR_LICENCE
         )
-
-        // ADR-0017: chosen on desk research and a desktop run, not yet checked on a phone.
-        private val EXPERIMENTAL_READING = setOf(Constants.COMIC_TEXT_DETECTOR_MODEL_ID)
 
         val NO_MULTILINGUAL_FIT = UiText(R.string.settings_no_multilingual_fit)
 

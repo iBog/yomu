@@ -61,19 +61,7 @@ class ModelManager @Inject constructor(
     companion object {
         /** Every model Yomu ships. [refreshModelList] upserts these rows; plain data so JVM tests can read it. */
         internal val REGISTRY = listOf(
-            ModelEntity(
-                id = Constants.BUBBLE_DETECTION_MODEL_ID,
-                name = "Bubble Detection (YOLO26 Nano Manga)",
-                type = ModelType.DETECTION,
-                fileName = Constants.BUBBLE_DETECTION_MODEL,
-                fileSize = 6_070_000L,
-                downloadUrl = "https://huggingface.co/Kiuyha/Manga-Bubble-YOLO/resolve/fb646500455e8a8a3a807fd27b855c8e4fc63766/onnx/yolo26n.onnx",
-                checksum = "b45c2e12cf0c3c1d2abfbbb9123c9f96f040f2ac36a0842382ecd9d859c851c7",
-                status = ModelStatus.AVAILABLE,
-                version = "1.0",
-                isRequired = true
-            ),
-            // RT-DETR-v2 trained on manga, webtoons and Western comics: also finds text in rectangular captions.
+            // The default: RT-DETR-v2 trained on manga, webtoons and Western comics, so it also finds text in rectangular captions.
             ModelEntity(
                 id = Constants.COMIC_TEXT_DETECTOR_MODEL_ID,
                 name = "Comic Text Detector (RT-DETR v4-s)",
@@ -82,6 +70,18 @@ class ModelManager @Inject constructor(
                 fileSize = 11_120_765L,
                 downloadUrl = "https://huggingface.co/ogkalu/comic-text-and-bubble-detector/resolve/16e8a622f91fabc6b5b65c96d32d1183f8843546/detector-v4-s_int8.onnx",
                 checksum = "5fe9e4f576e49d4e7e8b0e029d6d3cdc252abd4694113e1cae120e62c931ea79",
+                status = ModelStatus.AVAILABLE,
+                version = "1.0",
+                isRequired = true
+            ),
+            ModelEntity(
+                id = Constants.BUBBLE_DETECTION_MODEL_ID,
+                name = "Bubble Detection (YOLO26 Nano Manga)",
+                type = ModelType.DETECTION,
+                fileName = Constants.BUBBLE_DETECTION_MODEL,
+                fileSize = 6_070_000L,
+                downloadUrl = "https://huggingface.co/Kiuyha/Manga-Bubble-YOLO/resolve/fb646500455e8a8a3a807fd27b855c8e4fc63766/onnx/yolo26n.onnx",
+                checksum = "b45c2e12cf0c3c1d2abfbbb9123c9f96f040f2ac36a0842382ecd9d859c851c7",
                 status = ModelStatus.AVAILABLE,
                 version = "1.0",
                 isRequired = false
@@ -409,7 +409,7 @@ class ModelManager @Inject constructor(
 
         /** The curated model each slot holds when nothing (or an unknown id) is selected. */
         val SLOT_DEFAULTS: Map<ModelType, String> = mapOf(
-            ModelType.DETECTION to Constants.BUBBLE_DETECTION_MODEL_ID,
+            ModelType.DETECTION to Constants.COMIC_TEXT_DETECTOR_MODEL_ID,
             ModelType.OCR to Constants.MANGA_OCR_MODEL_ID,
             ModelType.LLM to LlmModelCatalog.DEFAULT.id
         )

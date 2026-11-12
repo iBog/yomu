@@ -118,7 +118,7 @@ flowchart LR
 | Stage | Where | What it does |
 |---|---|---|
 | Capture | `app/capture` | Grabs a single frame of the screen through `MediaProjection` |
-| Detection | `pipeline/bubble` | Finds speech bubbles and in-panel text with a single-class YOLO detector |
+| Detection | `pipeline/bubble` | Finds text inside and outside speech bubbles with an RT-DETR detector, or with a single-class YOLO detector if chosen |
 | OCR | `pipeline/ocr` | Reads each cropped bubble: manga-ocr for Japanese, or a PP-OCRv5 recognizer line by line for other sources |
 | Context | `pipeline/context` | Groups bubbles into panels and orders them right-to-left, top-to-bottom |
 | Translation | `ml/` | Sends the whole page to the LLM in the translation slot, using grammar-constrained, id-keyed output where the model supports it |
@@ -131,8 +131,8 @@ Yomu downloads every model on first launch. Each download is pinned to an exact 
 
 | Slot | Model | Licence |
 |---|---|---|
-| Bubble detection | [`Kiuyha/Manga-Bubble-YOLO`](https://huggingface.co/Kiuyha/Manga-Bubble-YOLO) (yolo26n, ONNX) | AGPL-3.0, from its Ultralytics YOLO26 base; see [ADR-0007](docs/adr/0007-bubble-text-detection-approach.md) |
-| Bubble detection (Experimental) | [`ogkalu/comic-text-and-bubble-detector`](https://huggingface.co/ogkalu/comic-text-and-bubble-detector) (RT-DETR-v2 v4-s, int8 ONNX); also finds text in rectangular captions | Apache-2.0; see [ADR-0020](docs/adr/0020-selectable-text-detector.md) |
+| Bubble detection (default) | [`ogkalu/comic-text-and-bubble-detector`](https://huggingface.co/ogkalu/comic-text-and-bubble-detector) (RT-DETR-v2 v4-s, int8 ONNX); also finds text in rectangular captions | Apache-2.0; see [ADR-0020](docs/adr/0020-selectable-text-detector.md) |
+| Bubble detection (alternative) | [`Kiuyha/Manga-Bubble-YOLO`](https://huggingface.co/Kiuyha/Manga-Bubble-YOLO) (yolo26n, ONNX) | AGPL-3.0, from its Ultralytics YOLO26 base; see [ADR-0007](docs/adr/0007-bubble-text-detection-approach.md) |
 | OCR | [`artsaraiva/manga-ocr-2025-onnx-past`](https://huggingface.co/artsaraiva/manga-ocr-2025-onnx-past/tree/151898756903f03a2682fa6be4507dfeff71fb7e) (manga-ocr-2025 with past key values) | Apache-2.0 |
 | OCR (other sources) | [PaddlePaddle PP-OCRv5 mobile recognizers](https://huggingface.co/PaddlePaddle) (Chinese and English, Korean, Latin, Cyrillic; ONNX) | Apache-2.0 |
 | Translation (default) | **Qwen2.5 1.5B Instruct** Q4_K_M | Apache-2.0 |

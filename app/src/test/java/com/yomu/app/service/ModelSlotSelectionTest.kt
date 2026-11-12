@@ -225,7 +225,7 @@ class ModelSlotSelectionTest {
         selection.delete(Constants.MANGA_OCR_MODEL_ID)
 
         assertNull(selection.selectedId(ModelType.OCR))
-        assertEquals(Constants.BUBBLE_DETECTION_MODEL_ID, selection.selectedId(ModelType.DETECTION))
+        assertEquals(Constants.COMIC_TEXT_DETECTOR_MODEL_ID, selection.selectedId(ModelType.DETECTION))
         assertEquals(LlmModelCatalog.DEFAULT.id, selection.selectedId(ModelType.LLM))
         Mockito.verify(ocr).release()
         Mockito.verifyNoInteractions(detector, llama)
@@ -254,7 +254,7 @@ class ModelSlotSelectionTest {
 
     @Test
     fun `slots are ready only when every selected model is READY`() = runTest {
-        val statuses = listOf(Constants.BUBBLE_DETECTION_MODEL_ID, Constants.MANGA_OCR_MODEL_ID, LlmModelCatalog.DEFAULT.id)
+        val statuses = listOf(Constants.COMIC_TEXT_DETECTOR_MODEL_ID, Constants.MANGA_OCR_MODEL_ID, LlmModelCatalog.DEFAULT.id)
             .associateWith { ModelStatus.READY }
 
         assertTrue(selection.ready(statuses))
@@ -271,12 +271,12 @@ class ModelSlotSelectionTest {
         val size = { id: String -> ModelType.entries.flatMap(selection::deliverables).single { it.id == id }.sizeBytes }
 
         assertEquals(
-            listOf(Constants.BUBBLE_DETECTION_MODEL_ID, Constants.MANGA_OCR_MODEL_ID, Constants.CAT_TRANSLATION_MODEL_ID),
+            listOf(Constants.COMIC_TEXT_DETECTOR_MODEL_ID, Constants.MANGA_OCR_MODEL_ID, Constants.CAT_TRANSLATION_MODEL_ID),
             ModelType.entries.map(selection::chosenId)
         )
         assertEquals(
             size(Constants.MANGA_OCR_MODEL_ID) + size(Constants.CAT_TRANSLATION_MODEL_ID),
-            selection.downloadBytes(mapOf(Constants.BUBBLE_DETECTION_MODEL_ID to ModelStatus.READY))
+            selection.downloadBytes(mapOf(Constants.COMIC_TEXT_DETECTOR_MODEL_ID to ModelStatus.READY))
         )
     }
 
@@ -289,7 +289,7 @@ class ModelSlotSelectionTest {
         assertEquals(LlmModelCatalog.DEFAULT.id, selection.chosenId(ModelType.LLM))
         assertEquals(
             LlmModelCatalog.DEFAULT.sizeBytes,
-            selection.downloadBytes(mapOf(Constants.BUBBLE_DETECTION_MODEL_ID to ModelStatus.READY, Constants.MANGA_OCR_MODEL_ID to ModelStatus.READY))
+            selection.downloadBytes(mapOf(Constants.COMIC_TEXT_DETECTOR_MODEL_ID to ModelStatus.READY, Constants.MANGA_OCR_MODEL_ID to ModelStatus.READY))
         )
     }
 
@@ -317,8 +317,7 @@ class ModelSlotSelectionTest {
 
         assertTrue(llm.single { it.id == Constants.QWEN35_2B_MODEL_ID }.experimental)
         assertFalse(llm.single { it.id == LlmModelCatalog.DEFAULT.id }.experimental)
-        assertTrue(selection.deliverables(ModelType.DETECTION).single { it.id == Constants.COMIC_TEXT_DETECTOR_MODEL_ID }.experimental)
-        assertFalse(selection.deliverables(ModelType.DETECTION).single { it.id == Constants.BUBBLE_DETECTION_MODEL_ID }.experimental)
+        assertTrue(selection.deliverables(ModelType.DETECTION).none { it.experimental })
         assertTrue(selection.deliverables(ModelType.OCR).none { it.experimental })
     }
 
