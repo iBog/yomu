@@ -26,10 +26,3 @@ fun parseIdKeyedLine(line: String): Pair<Int, String>? {
     val id = match.groupValues[1].toIntOrNull() ?: return null
     return id to match.groupValues[2].trim()
 }
-
-/** The first answer for each of [ids] in a whole reply; chatter around the lines and unknown ids are ignored. */
-fun parseIdKeyedReply(reply: String, ids: Set<Int>): Map<Int, String> {
-    val byId = linkedMapOf<Int, String>()
-    reply.lineSequence().mapNotNull(::parseIdKeyedLine).forEach { (id, text) -> if (id in ids) byId.putIfAbsent(id, text) }
-    return byId
-}

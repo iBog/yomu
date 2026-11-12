@@ -39,11 +39,4 @@ class BatchPromptTest {
         assertEquals(7 to "Привет", parseIdKeyedLine("  [7]   Привет "))
         assertNull(parseIdKeyedLine("Sure, here you go:"))
     }
-
-    @Test
-    fun `a reply is read by id, ignoring chatter, unknown ids and a repeated id`() {
-        val reply = "Sure!\n[1] Привет\n[3] extra\n[2] Пока\n[1] again\n"
-
-        assertEquals(mapOf(1 to "Привет", 2 to "Пока"), parseIdKeyedReply(reply, setOf(1, 2)))
-    }
 }

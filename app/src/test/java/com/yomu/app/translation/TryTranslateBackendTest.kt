@@ -55,6 +55,9 @@ class TryTranslateBackendTest {
         Mockito.mock(Typesetter::class.java)
     )
 
+    /** The chat request; the server is first asked, once, whether it is Ollama. */
+    private fun chat(): Request = requests.single { it.url.encodedPath == "/v1/chat/completions" }
+
     private fun chooseNetwork() {
         store.saveUrl("http://192.168.1.10:11434")
         store.saveApiKey("k")
@@ -69,9 +72,9 @@ class TryTranslateBackendTest {
         val result = pipeline.translateLines(listOf("Hello"), TargetLanguage.RUSSIAN, SpokenLanguage.ENGLISH, emptyList())
 
         assertEquals("Привет", result.translations.single().translatedText)
-        assertEquals("http://192.168.1.10:11434/v1/chat/completions", requests.first().url.toString())
-        assertEquals("Bearer k", requests.first().header("Authorization"))
-        val sent = okio.Buffer().also { requests.first().body!!.writeTo(it) }.readUtf8()
+        assertEquals("http://192.168.1.10:11434/v1/chat/completions", chat().url.toString())
+        assertEquals("Bearer k", chat().header("Authorization"))
+        val sent = okio.Buffer().also { chat().body!!.writeTo(it) }.readUtf8()
         assertTrue(sent, sent.contains("Translate each English line to Russian") && sent.contains("[0] Hello") && sent.contains("\"model\":\"qwen\""))
     }
 
@@ -95,7 +98,7 @@ class TryTranslateBackendTest {
 
         pipeline.translateLines(listOf("Hello"), TargetLanguage.GERMAN, null, emptyList())
 
-        val sent = okio.Buffer().also { requests.first().body!!.writeTo(it) }.readUtf8()
+        val sent = okio.Buffer().also { chat().body!!.writeTo(it) }.readUtf8()
         assertTrue(sent, sent.contains("Translate each line to German"))
     }
 
@@ -115,7 +118,7 @@ class TryTranslateBackendTest {
 
         pipeline.translateLines(listOf("ルフィ is here"), TargetLanguage.RUSSIAN, null, listOf(com.yomu.core.GlossaryEntry("ルフィ", "Luffy")))
 
-        val sent = okio.Buffer().also { requests.first().body!!.writeTo(it) }.readUtf8()
+        val sent = okio.Buffer().also { chat().body!!.writeTo(it) }.readUtf8()
         assertTrue(sent, sent.contains("Luffy is here"))
     }
 }

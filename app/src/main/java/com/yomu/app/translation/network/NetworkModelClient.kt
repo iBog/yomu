@@ -3,7 +3,12 @@ package com.yomu.app.translation.network
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.HttpUrl
@@ -15,9 +20,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 import java.net.SocketTimeoutException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -58,16 +65,18 @@ const val NETWORK_BAD_REPLY = "network_bad_reply"
 
 /**
  * Talks to an OpenAI-compatible server: Ollama, llama.cpp's server, or a hosted API. Models come from `/v1/models`
- * (Ollama's `/api/tags` as a second try); a page is translated through `/v1/chat/completions`.
+ * (Ollama's `/api/tags` as a second try). A page is translated through `/v1/chat/completions` and its reply read as it
+ * streams. An Ollama server is told apart once, and asked through its own `/api/chat` instead, which takes `keep_alive`
+ * in the same request, so no other server is sent anything it does not know.
  */
 @Singleton
 class NetworkModelClient @Inject constructor(http: OkHttpClient) {
-    // A model on a home server can take minutes for a page; the shared client's 30 s would cut it off.
+    // A model on a home server can take minutes for a page; the shared client's 30 s would cut off a silent wait.
     private val http = http.newBuilder().readTimeout(CHAT_TIMEOUT_SECONDS, TimeUnit.SECONDS).build()
 
     private class Reply(val code: Int, val body: String)
 
-    private val withoutKeepAlive: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+    private val ollamaServers = ConcurrentHashMap<String, Boolean>()
 
     suspend fun listModels(url: String, apiKey: String): ModelsResult {
         val base = url.serverBase() ?: return ModelsResult.Failed(NETWORK_BAD_URL)
@@ -86,48 +95,65 @@ class NetworkModelClient @Inject constructor(http: OkHttpClient) {
         return if (answered) ModelsResult.Unlisted else ModelsResult.Failed(NETWORK_UNREACHABLE)
     }
 
-    suspend fun chat(config: NetworkConfig, system: String, user: String, temperature: Float): ChatResult {
+    /** Asks for one reply and hands each visible piece of it to [onDelta] as it arrives, on the calling coroutine's thread. */
+    suspend fun chat(config: NetworkConfig, system: String, user: String, temperature: Float, onDelta: (String) -> Unit = {}): ChatResult {
         val base = config.url.serverBase() ?: return ChatResult.Failed(NETWORK_BAD_URL)
+        val ollama = isOllama(base, config.apiKey)
+        val messages = JsonArray().apply {
+            add(message("system", system))
+            add(message("user", user))
+        }
         val body = JsonObject().apply {
             addProperty("model", config.model)
-            add("messages", JsonArray().apply {
-                add(message("system", system))
-                add(message("user", user))
-            })
-            addProperty("temperature", temperature)
-            addProperty("max_tokens", MAX_TOKENS)
-            addProperty("stream", false)
+            add("messages", messages)
+            addProperty("stream", true)
+            if (ollama) {
+                addProperty("keep_alive", "${config.keepAliveMinutes}m")
+                add("options", JsonObject().apply {
+                    addProperty("temperature", temperature)
+                    addProperty("num_predict", MAX_TOKENS)
+                })
+            } else {
+                addProperty("temperature", temperature)
+                addProperty("max_tokens", MAX_TOKENS)
+            }
         }.toString().toRequestBody(JSON)
-        val reply = try {
-            send(request("$base/v1/chat/completions", config.apiKey).post(body).build())
-        } catch (e: IOException) {
-            return ChatResult.Failed(failureOf(e))
-        }
-        return when {
-            reply.code == 401 || reply.code == 403 -> ChatResult.Failed(NETWORK_UNAUTHORIZED)
-            reply.code != 200 -> ChatResult.Failed("network_http_${reply.code}")
-            else -> replyText(reply.body)?.let { ChatResult.Success(it).also { keepLoaded(base, config) } } ?: ChatResult.Failed(NETWORK_BAD_REPLY)
-        }
+        val path = if (ollama) "/api/chat" else "/v1/chat/completions"
+        return stream(request(base + path, config.apiKey).post(body).build(), ollama, onDelta)
     }
 
-    /**
-     * Asks an Ollama server to keep the model loaded for [NetworkConfig.keepAliveMinutes] more. A chat request resets
-     * that time to the server's default (five minutes), so this goes after every page, and the page does not wait for it.
-     * A server without `/api/generate` answers 404 once and is not asked again; every failure is ignored.
-     */
-    private fun keepLoaded(base: String, config: NetworkConfig) {
-        if (base in withoutKeepAlive) return
-        val body = JsonObject().apply {
-            addProperty("model", config.model)
-            addProperty("keep_alive", "${config.keepAliveMinutes}m")
-        }.toString().toRequestBody(JSON)
-        http.newCall(request("$base/api/generate", config.apiKey).post(body).build()).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) = Unit
+    /** Whether the server at [base] is Ollama, which answers `/api/version`; remembered, except when the server could not be reached. */
+    private suspend fun isOllama(base: String, apiKey: String): Boolean {
+        ollamaServers[base]?.let { return it }
+        val reply = try {
+            send(request("$base/api/version", apiKey).get().build())
+        } catch (e: IOException) {
+            return false
+        }
+        return (reply.code == 200 && "\"version\"" in reply.body).also { ollamaServers[base] = it }
+    }
 
-            override fun onResponse(call: Call, response: Response) {
-                response.use { if (it.code in NO_KEEP_ALIVE_CODES) withoutKeepAlive += base }
+    /** Reads the reply on an IO thread; cancelling the coroutine cancels the call, so a cancelled page stops waiting on the server. */
+    private suspend fun stream(request: Request, ollama: Boolean, onDelta: (String) -> Unit): ChatResult = withContext(Dispatchers.IO) {
+        val call = http.newCall(request)
+        @OptIn(InternalCoroutinesApi::class)
+        val cancelOnCancel = coroutineContext.job.invokeOnCompletion(onCancelling = true) { call.cancel() }
+        try {
+            call.execute().use { response ->
+                when {
+                    response.code == 401 || response.code == 403 -> ChatResult.Failed(NETWORK_UNAUTHORIZED)
+                    response.code != 200 -> ChatResult.Failed("network_http_${response.code}")
+                    else -> response.body?.source()
+                        ?.let { readChatStream(it, replyFormat(response.header("Content-Type"), ollama), onDelta) }
+                        ?: ChatResult.Failed(NETWORK_BAD_REPLY)
+                }
             }
-        })
+        } catch (e: IOException) {
+            coroutineContext.ensureActive()
+            ChatResult.Failed(failureOf(e))
+        } finally {
+            cancelOnCancel.dispose()
+        }
     }
 
     private fun request(url: String, apiKey: String): Request.Builder = Request.Builder().url(url).apply {
@@ -141,7 +167,6 @@ class NetworkModelClient @Inject constructor(http: OkHttpClient) {
 
     private fun failureOf(e: IOException): String = if (e is SocketTimeoutException) NETWORK_TIMEOUT else NETWORK_UNREACHABLE
 
-    /** Cancelling the coroutine cancels the call, so a cancelled page stops waiting on the server. */
     private suspend fun send(request: Request): Reply = suspendCancellableCoroutine { continuation ->
         val call = http.newCall(request)
         continuation.invokeOnCancellation { call.cancel() }
@@ -166,16 +191,9 @@ class NetworkModelClient @Inject constructor(http: OkHttpClient) {
         }
     }.getOrDefault(emptyList())
 
-    private fun replyText(body: String): String? = runCatching {
-        JsonParser.parseString(body).asJsonObject.getAsJsonArray("choices")[0].asJsonObject
-            .getAsJsonObject("message").get("content").asString
-    }.getOrNull()?.replace(THINK_BLOCK, "")?.trim()
-
     private companion object {
         val MODEL_PATHS = listOf("/v1/models", "/api/tags")
         val JSON = "application/json".toMediaType()
-        val THINK_BLOCK = Regex("<think>.*?</think>", RegexOption.DOT_MATCHES_ALL)
-        val NO_KEEP_ALIVE_CODES = setOf(404, 405, 501)
         const val CHAT_TIMEOUT_SECONDS = 180L
         const val MAX_TOKENS = 2048
     }
