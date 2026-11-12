@@ -19,7 +19,7 @@ class TranslationRenderOverlay(
     private val context: Context,
     private val windowManager: WindowManager,
     /** The whole display as it is turned now, which is what a captured frame is laid over. */
-    private val displaySize: () -> Point = { realDisplaySize(windowManager) }
+    private val displaySize: () -> Point = { realDisplaySize(context, windowManager) }
 ) {
     companion object {
         private const val TAG = "TranslationRender"

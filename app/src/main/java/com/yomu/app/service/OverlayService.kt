@@ -174,7 +174,7 @@ class OverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        displaySize = realDisplaySize(windowManager)
+        displaySize = realDisplaySize(this, windowManager)
         floatingButtonOverlay = FloatingButtonOverlay(this, windowManager)
         translationRenderOverlay = TranslationRenderOverlay(this, windowManager)
         statusOverlay = TranslationStatusOverlay(this, windowManager)
@@ -296,7 +296,7 @@ class OverlayService : Service() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val size = realDisplaySize(windowManager)
+        val size = realDisplaySize(this, windowManager)
         if (size != displaySize) {
             // Turned: the capture follows the screen, and a page captured or drawn before the turn no longer fits it.
             displaySize = size

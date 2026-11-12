@@ -65,7 +65,7 @@ class ScreenCaptureManager @Inject constructor(
             }
         }, mainHandler)
 
-        val display = realDisplaySize(windowManager)
+        val display = realDisplaySize(context, windowManager)
         captureWidth = display.x
         captureHeight = display.y
         captureDensity = context.resources.displayMetrics.densityDpi
@@ -95,8 +95,9 @@ class ScreenCaptureManager @Inject constructor(
      * wrong place. A new reader goes with the new size, so no frame of the old shape is ever read.
      */
     fun matchDisplay() {
-        val display = realDisplaySize(windowManager)
+        val display = realDisplaySize(context, windowManager)
         val mirror = virtualDisplay ?: return
+        Log.d(TAG, "match display=${display.x}x${display.y} capture=${captureWidth}x$captureHeight")
         if (display.x == captureWidth && display.y == captureHeight) return
         val reader = ImageReader.newInstance(display.x, display.y, PixelFormat.RGBA_8888, 2)
         mirror.resize(display.x, display.y, captureDensity)
