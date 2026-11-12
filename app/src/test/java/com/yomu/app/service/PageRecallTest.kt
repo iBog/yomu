@@ -207,6 +207,21 @@ class PageRecallTest {
         assertEquals(result("second"), recall.recall(fingerprint(page(0)), settings))
     }
 
+    /** A retranslation that fails keeps the earlier translation, so the next capture still recalls it (#402). */
+    @Test
+    fun `a failed second translation of a page leaves the first one recalled`() {
+        val recall = PageRecall()
+        recall.remember(fingerprint(page(0)), settings, result("first"))
+        val timedOut = result("second").copy(
+            translationResult = TranslationResult(listOf(answered(0, "second")), "[0] second", 0L, outcome = TranslationOutcome.TIMEOUT)
+        )
+
+        recall.remember(fingerprint(page(0)), settings, timedOut)
+        recall.remember(fingerprint(page(0)), settings, result("unanswered", listOf(unanswered(0))))
+
+        assertEquals(result("first"), recall.recall(fingerprint(page(0)), settings))
+    }
+
     @Test
     fun `while recall is off a remembered page is not recalled`() {
         val recall = PageRecall()

@@ -31,6 +31,8 @@ class QuickSettingsPopupTest {
     private val chosen = mutableListOf<TargetLanguage>()
     private val recallChanges = mutableListOf<Boolean>()
     private val recallSwitch = OverlayRecallSwitch(RuntimeEnvironment.getApplication()) { recallChanges += it }
+    private var hasLastPage = false
+    private var translateAgainRequests = 0
     private val popup = QuickSettingsPopup(
         context = RuntimeEnvironment.getApplication(),
         windowManager = windowManager,
@@ -44,7 +46,8 @@ class QuickSettingsPopupTest {
         recallSwitch = recallSwitch,
         onFontSizeChanged = {},
         onThresholdChanged = {},
-        hasLastPage = { false },
+        hasLastPage = { hasLastPage },
+        onTranslateAgainRequested = { translateAgainRequests++ },
         onReportRequested = {},
         onOpenAppRequested = {},
         onStopRequested = {},
@@ -122,5 +125,24 @@ class QuickSettingsPopupTest {
 
         recall.performClick()
         assertEquals(listOf(false), recallChanges)
+    }
+
+    /** Translate again sits above "Report last page" and follows the same rule: enabled only once a page exists (#402). */
+    @Test
+    fun translateAgainIsDimmedWithoutALastPageAndOtherwiseClosesThePopupAndRetranslates() {
+        val content = shownContent()
+        val translateAgain = checkNotNull(content.withText("Translate again"))
+        val report = checkNotNull(content.withText("Report last page"))
+        val actions = translateAgain.parent as ViewGroup
+        assertEquals(actions.indexOfChild(report) - 1, actions.indexOfChild(translateAgain))
+        assertFalse(translateAgain.isEnabled)
+
+        hasLastPage = true
+        popup.refreshLastPageAvailability()
+        assertTrue(translateAgain.isEnabled)
+
+        translateAgain.performClick()
+        assertEquals(1, translateAgainRequests)
+        assertEquals(1, unblocks)
     }
 }
