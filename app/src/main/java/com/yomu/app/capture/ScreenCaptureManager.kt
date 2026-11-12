@@ -105,6 +105,7 @@ class ScreenCaptureManager @Inject constructor(
         imageReader = reader
         captureWidth = display.x
         captureHeight = display.y
+        Log.i(TAG, "capture resized to ${display.x}x${display.y}")
     }
 
     fun captureScreen(onBitmapReady: (Bitmap?) -> Unit) {
