@@ -53,7 +53,8 @@ class HomeViewModel @Inject constructor(
     private companion object {
         val SELECTION_KEYS = setOf(
             NetworkModelStore.KEY_BACKEND, NetworkModelStore.KEY_URL, NetworkModelStore.KEY_MODEL,
-            Constants.PREF_SPOKEN_LANGUAGE, Constants.PREF_TARGET_LANGUAGE, Constants.PREF_LLM_MODEL
+            Constants.PREF_SPOKEN_LANGUAGE, Constants.PREF_TARGET_LANGUAGE, Constants.PREF_LLM_MODEL,
+            Constants.PREF_DETECTION_MODEL, Constants.PREF_OCR_MODEL
         )
         const val SETUP_COMPLETE = "reading_setup_complete"
         const val HAS_READ = "has_read"
@@ -191,8 +192,8 @@ class HomeViewModel @Inject constructor(
 
     private fun HomeUiState.withSlots(): HomeUiState = copy(
         chosenIds = ModelType.entries.associateWith(slotSelection::chosenId),
-        translationSelectedId = slotSelection.selectedId(ModelType.LLM),
-        translationPendingId = slotSelection.pendingId(ModelType.LLM),
+        selectedIds = ModelType.entries.mapNotNull { type -> slotSelection.selectedId(type)?.let { type to it } }.toMap(),
+        pendingIds = ModelType.entries.mapNotNull { type -> slotSelection.pendingId(type)?.let { type to it } }.toMap(),
         // With the slots, since a download that never completes can return the language to English.
         targetLanguage = slotSelection.targetLanguage(),
         spoken = sourceLanguage.current(),

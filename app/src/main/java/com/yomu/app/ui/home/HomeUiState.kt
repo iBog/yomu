@@ -35,8 +35,9 @@ data class HomeUiState(
     val setupBlockedBy: String? = null,
     val deliverables: Map<ModelType, List<SlotDeliverable>> = emptyMap(),
     val chosenIds: Map<ModelType, String> = emptyMap(),
-    val translationSelectedId: String? = null,
-    val translationPendingId: String? = null,
+    /** The model in use per slot, and the one waiting for its download to take over. */
+    val selectedIds: Map<ModelType, String> = emptyMap(),
+    val pendingIds: Map<ModelType, String> = emptyMap(),
     val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH,
     /** Whether pages are translated by the network model, which writes every target language and has its own name. */
     val networkModel: String? = null,
@@ -72,14 +73,20 @@ data class HomeUiState(
     fun languagesSummary(): UiText =
         UiText(R.string.home_selection_languages, UiText(spoken?.labelRes() ?: R.string.language_auto), UiText(targetLanguage.labelRes()))
 
-    /** Which engine translates and with which model: the network model by its name, or the on-device one, with its pending successor. */
-    fun engineSummary(): UiText {
-        networkModel?.let { return UiText(R.string.home_selection_network, it) }
-        val options = deliverables[ModelType.LLM].orEmpty()
-        val selected = options.firstOrNull { it.id == translationSelectedId }?.name
+    /** Which engine translates and with which model: the network model by its name, or the on-device one. */
+    fun engineSummary(): UiText = networkModel?.let { UiText(R.string.home_selection_network, it) }
+        ?: UiText(R.string.home_selection_device, modelName(ModelType.LLM))
+
+    fun detectorSummary(): UiText = UiText(R.string.home_selection_detector, modelName(ModelType.DETECTION))
+
+    fun ocrSummary(): UiText = UiText(R.string.home_selection_ocr, modelName(ModelType.OCR))
+
+    /** The slot's model in use, with the one that takes over when its download finishes. */
+    private fun modelName(type: ModelType): UiText {
+        val options = deliverables[type].orEmpty()
+        val selected = options.firstOrNull { it.id == selectedIds[type] }?.name
             ?.let { UiText(R.string.home_verbatim, it) } ?: UiText(R.string.home_chip_no_model)
-        val model = options.firstOrNull { it.id == translationPendingId }
+        return options.firstOrNull { it.id == pendingIds[type] }
             ?.let { UiText(R.string.home_chip_pending, selected, it.name) } ?: selected
-        return UiText(R.string.home_selection_device, model)
     }
 }

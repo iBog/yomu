@@ -21,7 +21,7 @@ class CurrentSelectionTest {
     fun `the on-device model is named with its engine`() {
         assertEquals(
             UiText(R.string.home_selection_device, model("Qwen2.5 1.5B Instruct")),
-            state.copy(translationSelectedId = "qwen").engineSummary()
+            state.copy(selectedIds = mapOf(ModelType.LLM to "qwen")).engineSummary()
         )
     }
 
@@ -29,7 +29,7 @@ class CurrentSelectionTest {
     fun `a pending pick names the model that takes over when its download finishes`() {
         assertEquals(
             UiText(R.string.home_selection_device, UiText(R.string.home_chip_pending, model("Qwen2.5 1.5B Instruct"), "CAT-Translate 1.4B")),
-            state.copy(translationSelectedId = "qwen", translationPendingId = "cat").engineSummary()
+            state.copy(selectedIds = mapOf(ModelType.LLM to "qwen"), pendingIds = mapOf(ModelType.LLM to "cat")).engineSummary()
         )
     }
 
@@ -42,8 +42,27 @@ class CurrentSelectionTest {
     fun `the network model is named instead of the on-device one`() {
         assertEquals(
             UiText(R.string.home_selection_network, "qwen2.5:7b"),
-            state.copy(translationSelectedId = "qwen", networkModel = "qwen2.5:7b").engineSummary()
+            state.copy(selectedIds = mapOf(ModelType.LLM to "qwen"), networkModel = "qwen2.5:7b").engineSummary()
         )
+    }
+
+    @Test
+    fun `the detector and the OCR model are named, with a pending successor`() {
+        val readers = HomeUiState(
+            deliverables = mapOf(
+                ModelType.DETECTION to listOf(SlotDeliverable("rt", "RT-DETR", 1L, "x"), SlotDeliverable("yolo", "YOLO", 1L, "x")),
+                ModelType.OCR to listOf(SlotDeliverable("manga", "MangaOCR", 1L, "x"), SlotDeliverable("latin", "Latin", 1L, "x"))
+            ),
+            selectedIds = mapOf(ModelType.DETECTION to "rt", ModelType.OCR to "manga"),
+            pendingIds = mapOf(ModelType.OCR to "latin")
+        )
+
+        assertEquals(UiText(R.string.home_selection_detector, model("RT-DETR")), readers.detectorSummary())
+        assertEquals(
+            UiText(R.string.home_selection_ocr, UiText(R.string.home_chip_pending, model("MangaOCR"), "Latin")),
+            readers.ocrSummary()
+        )
+        assertEquals(UiText(R.string.home_selection_ocr, UiText(R.string.home_chip_no_model)), HomeUiState().ocrSummary())
     }
 
     @Test
