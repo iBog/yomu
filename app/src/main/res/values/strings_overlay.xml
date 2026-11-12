@@ -24,6 +24,7 @@
     <string name="overlay_font_size_description">Translation font size</string>
     <string name="overlay_threshold_description">Bubble threshold</string>
     <string name="overlay_threshold">Bubble threshold · %1$.2f</string>
+    <string name="overlay_translate_again">Translate again</string>
     <string name="overlay_report_last_page">Report last page</string>
     <string name="overlay_open_yomu">Open Yomu</string>
     <string name="overlay_stop_service">Stop service</string>

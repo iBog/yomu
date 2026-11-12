@@ -26,6 +26,7 @@ class ScreenCaptureManager @Inject constructor(
         private const val TAG = "ScreenCapture"
         private const val CAPTURE_TIMEOUT_MS = 4_000L
         private const val CAPTURE_POLL_INTERVAL_MS = 80L
+        private const val FRESH_FRAME_WAIT_MS = 300L
     }
 
     /** Where the display's size comes from while reading is on: a probe window that is laid out again at every turn. */
@@ -116,6 +117,11 @@ class ScreenCaptureManager @Inject constructor(
 
     private fun displaySize(): Point = displayProvider?.invoke() ?: realDisplaySize(context, windowManager)
 
+    /**
+     * Hands [onBitmapReady] a frame drawn after this call. The reader still holds the newest frame from before
+     * it, which can show an overlay removed just now, such as quick settings closed by "Translate again" (#402).
+     * If nothing is drawn within [FRESH_FRAME_WAIT_MS] the screen has not changed, so that frame is current.
+     */
     fun captureScreen(onBitmapReady: (Bitmap?) -> Unit) {
         matchDisplay()
         val reader = imageReader
@@ -127,6 +133,7 @@ class ScreenCaptureManager @Inject constructor(
 
         var attempts = 0
         var finished = false
+        var queued: Bitmap? = null
         val startTimeMs = System.currentTimeMillis()
         val timeoutRunnable = Runnable {
             if (finished) return@Runnable
@@ -156,10 +163,17 @@ class ScreenCaptureManager @Inject constructor(
                 }
                 val bitmap = acquireBitmap(reader)
                 if (bitmap != null) {
+                    queued?.recycle()
                     finish(bitmap = bitmap, gotFrame = true, width = bitmap.width, height = bitmap.height, timeoutFired = false)
                     return
                 }
                 val elapsedMs = System.currentTimeMillis() - startTimeMs
+                val unchanged = queued
+                if (unchanged != null && elapsedMs >= FRESH_FRAME_WAIT_MS) {
+                    Log.i(TAG, "capture screen unchanged, using the frame queued before the request")
+                    finish(bitmap = unchanged, gotFrame = true, width = unchanged.width, height = unchanged.height, timeoutFired = false)
+                    return
+                }
                 if (elapsedMs >= CAPTURE_TIMEOUT_MS) {
                     finish(bitmap = null, gotFrame = false, width = 0, height = 0, timeoutFired = true)
                     return
@@ -169,7 +183,10 @@ class ScreenCaptureManager @Inject constructor(
         }
 
         mainHandler.postDelayed(timeoutRunnable, CAPTURE_TIMEOUT_MS)
-        mainHandler.post(pollRunnable)
+        mainHandler.post {
+            queued = acquireBitmap(reader)
+            mainHandler.postDelayed(pollRunnable, CAPTURE_POLL_INTERVAL_MS)
+        }
     }
 
     private fun acquireBitmap(reader: ImageReader): Bitmap? {

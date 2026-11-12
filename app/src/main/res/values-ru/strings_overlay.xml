@@ -24,6 +24,7 @@
     <string name="overlay_font_size_description">Размер шрифта перевода</string>
     <string name="overlay_threshold_description">Порог облачков</string>
     <string name="overlay_threshold">Порог облачков · %1$.2f</string>
+    <string name="overlay_translate_again">Перевести снова</string>
     <string name="overlay_report_last_page">Отчёт о последней странице</string>
     <string name="overlay_open_yomu">Открыть Yomu</string>
     <string name="overlay_stop_service">Остановить службу</string>

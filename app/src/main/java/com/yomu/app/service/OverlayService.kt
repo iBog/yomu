@@ -90,7 +90,7 @@ class OverlayService : Service() {
     @Volatile private var lastPage: PageRecord? = null
         set(value) {
             field = value
-            mainScope.launch { quickSettingsPopup?.refreshReportAvailability() }
+            mainScope.launch { quickSettingsPopup?.refreshLastPageAvailability() }
         }
 
     private lateinit var windowManager: WindowManager
@@ -406,6 +406,7 @@ class OverlayService : Service() {
             },
             onThresholdChanged = { thresholdStore.save(it) },
             hasLastPage = { lastPage != null },
+            onTranslateAgainRequested = { startTranslation(recall = false) },
             onReportRequested = ::reportLastPage,
             onOpenAppRequested = ::openApp,
             onStopRequested = { stopSelf() },
@@ -482,10 +483,11 @@ class OverlayService : Service() {
 
     /**
      * Starts a capture unless a translation is active, streams previews to the main thread, and saves successful results.
-     * A page already translated this session with the same settings is shown at once, with no pipeline run or history row.
+     * A page already translated this session with the same settings is shown at once, with no pipeline run or history row,
+     * unless [recall] is false: "Translate again" (#402) runs the pipeline, and its result replaces the remembered page.
      * Late preview updates are ignored after cancellation so they cannot restore a cleared overlay.
      */
-    private fun startTranslation() {
+    private fun startTranslation(recall: Boolean = true) {
         // A cancelled job is no longer active; the new one queues behind it on the pipeline's lock.
         if (translationJob?.isActive == true) return
         removeQuickSettingsPopup()
@@ -520,7 +522,7 @@ class OverlayService : Service() {
             val fingerprint = PageFingerprint.of(bitmap, ignored)
             val settings = pageSettings()
             val recallBegunAt = pageRecall.timesTurnedOff
-            val recalled = pageRecall.recall(fingerprint, settings)
+            val recalled = if (recall) pageRecall.recall(fingerprint, settings) else null
             Log.i(TAG, "Page recall hit=${recalled != null} ms=${System.currentTimeMillis() - fingerprintStart} ignored=$ignored")
             recalled?.let { page ->
                 lastPage = PageRecord(bitmap, page, settings, recalled = true)
