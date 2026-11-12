@@ -450,7 +450,7 @@ class OverlayService : Service() {
         }
     }
 
-    private fun translationModelName(): String = translationSelection.networkModelName()?.let { getString(R.string.home_chip_network, it) }
+    private fun translationModelName(): String = translationSelection.networkModelName()?.let { getString(R.string.home_selection_network, it) }
         ?: slotSelection.selectedId(ModelType.LLM)
         ?.let { id -> slotSelection.deliverables(ModelType.LLM).firstOrNull { it.id == id }?.name }
         ?: getString(R.string.service_no_model_selected)

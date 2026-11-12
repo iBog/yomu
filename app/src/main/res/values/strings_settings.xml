@@ -36,6 +36,7 @@
     <string name="settings_network_description">Translate on a server instead of this phone: Ollama, llama.cpp or any OpenAI-compatible API. The text of every page is sent to it.</string>
     <string name="settings_network_url">Server URL</string>
     <string name="settings_network_url_hint">http://192.168.1.10:11434</string>
+    <string name="settings_network_answered">The server answered</string>
     <string name="settings_network_key">API Key (Optional)</string>
     <string name="settings_network_model">Model</string>
     <string name="settings_network_model_choose">Choose a model</string>

@@ -43,10 +43,10 @@
 
     <!-- Quick settings -->
     <string name="home_verbatim">%1$s</string>
-    <string name="home_chip_from">From: %1$s</string>
-    <string name="home_chip_to">To: %1$s</string>
+    <string name="home_selection_languages">%1$s → %2$s</string>
+    <string name="home_selection_device">On Device Model · %1$s</string>
+    <string name="home_selection_network">Network Model · %1$s</string>
     <string name="home_chip_no_model">No model selected</string>
-    <string name="home_chip_network">Network: %1$s</string>
     <string name="home_chip_pending">%1$s · %2$s when downloaded</string>
     <string name="home_needs_more_memory">Needs more memory</string>
     <string name="home_selected">Selected</string>

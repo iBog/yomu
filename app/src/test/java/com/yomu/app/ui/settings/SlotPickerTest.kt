@@ -2,6 +2,7 @@ package com.yomu.app.ui.settings
 
 import android.content.Context
 import com.yomu.app.R
+import com.yomu.app.db.entities.ModelStatus
 import com.yomu.app.service.SlotDeliverable
 import com.yomu.app.ui.UiText
 import org.junit.Assert.assertEquals
@@ -24,6 +25,16 @@ class SlotPickerTest {
 
         assertEquals("1.00 GB · Fast · Multilingual · Apache-2.0 · Fits this device", deliverableDetail(context, qwen, fits = true))
         assertEquals("1.00 GB · Fast · English only · MIT · Experimental · Needs more memory", deliverableDetail(context, cat, fits = false))
+    }
+
+    @Test
+    fun `a deliverable's status says whether it is downloaded, in use or taking over`() {
+        assertEquals("Not downloaded", deliverableStatus(context, null, null, selected = false, pending = false))
+        assertEquals("Not downloaded · Takes over when downloaded", deliverableStatus(context, ModelStatus.AVAILABLE, null, selected = false, pending = true))
+        assertEquals("Downloading 40% · Takes over when downloaded", deliverableStatus(context, ModelStatus.DOWNLOADING, 40, selected = false, pending = true))
+        assertEquals("Downloaded", deliverableStatus(context, ModelStatus.READY, null, selected = false, pending = false))
+        assertEquals("In use", deliverableStatus(context, ModelStatus.READY, null, selected = true, pending = false))
+        assertEquals("Couldn't download", deliverableStatus(context, ModelStatus.ERROR, null, selected = false, pending = false))
     }
 
     @Test

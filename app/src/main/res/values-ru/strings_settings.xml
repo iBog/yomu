@@ -36,6 +36,7 @@
     <string name="settings_network_description">Перевод на сервере вместо телефона: Ollama, llama.cpp или любой OpenAI-совместимый API. Текст каждой страницы отправляется на него.</string>
     <string name="settings_network_url">Адрес сервера</string>
     <string name="settings_network_url_hint">http://192.168.1.10:11434</string>
+    <string name="settings_network_answered">Сервер ответил</string>
     <string name="settings_network_key">API-ключ (необязательно)</string>
     <string name="settings_network_model">Модель</string>
     <string name="settings_network_model_choose">Выберите модель</string>

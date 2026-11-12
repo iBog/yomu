@@ -31,6 +31,9 @@ sealed interface ModelsState {
 
     /** The server could not be used; [code] is the client's `network_` code. */
     data class Failed(val code: String) : ModelsState
+
+    /** Whether a server answered at the address: it listed its models, or answered without a list. */
+    val answered: Boolean get() = this is Listed || this === Manual
 }
 
 data class NetworkUiState(

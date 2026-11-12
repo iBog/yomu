@@ -68,19 +68,18 @@ data class HomeUiState(
 
     fun languageBlock(deliverable: SlotDeliverable): UiText? = ModelSlotSelection.languageBlock(deliverable, targetLanguage)
 
-    fun languageUnavailable(language: TargetLanguage): UiText? =
-        if (networkModel != null) null else ModelSlotSelection.languageUnavailable(language, deliverables[ModelType.LLM].orEmpty(), ::fits)
+    /** "Auto → Russian": the language pages are written in, as far as the reader said, and the one they are translated into. */
+    fun languagesSummary(): UiText =
+        UiText(R.string.home_selection_languages, UiText(spoken?.labelRes() ?: R.string.language_auto), UiText(targetLanguage.labelRes()))
 
-    fun spokenChipLabel(): UiText = UiText(R.string.home_chip_from, UiText(spoken?.labelRes() ?: R.string.language_auto))
-
-    fun languageChipLabel(): UiText = UiText(R.string.home_chip_to, UiText(targetLanguage.labelRes()))
-
-    fun translationChipLabel(): UiText {
-        networkModel?.let { return UiText(R.string.home_chip_network, it) }
+    /** Which engine translates and with which model: the network model by its name, or the on-device one, with its pending successor. */
+    fun engineSummary(): UiText {
+        networkModel?.let { return UiText(R.string.home_selection_network, it) }
         val options = deliverables[ModelType.LLM].orEmpty()
         val selected = options.firstOrNull { it.id == translationSelectedId }?.name
             ?.let { UiText(R.string.home_verbatim, it) } ?: UiText(R.string.home_chip_no_model)
-        return options.firstOrNull { it.id == translationPendingId }
+        val model = options.firstOrNull { it.id == translationPendingId }
             ?.let { UiText(R.string.home_chip_pending, selected, it.name) } ?: selected
+        return UiText(R.string.home_selection_device, model)
     }
 }

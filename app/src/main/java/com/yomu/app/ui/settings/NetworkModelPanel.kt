@@ -19,6 +19,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
@@ -95,6 +97,7 @@ internal fun NetworkModelPanel(
                 placeholder = { Text(stringResource(R.string.settings_network_url_hint)) },
                 singleLine = true,
                 isError = failure != null,
+                trailingIcon = if (state.models.answered) ({ AnsweredMark() }) else null,
                 supportingText = failure?.let { { Text(stringResource(networkFailureRes(it), it)) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 modifier = Modifier.fillMaxWidth()
@@ -124,6 +127,14 @@ internal fun NetworkModelPanel(
         }
     }
 }
+
+/** The server at this address answered, so the address is good. */
+@Composable
+private fun AnsweredMark() {
+    Icon(Icons.Default.Check, contentDescription = stringResource(R.string.settings_network_answered), tint = ANSWERED_GREEN)
+}
+
+private val ANSWERED_GREEN = Color(0xFF2E7D32)
 
 @Composable
 private fun ModelDropdown(models: List<String>, selected: String, onPick: (String) -> Unit) {

@@ -20,7 +20,6 @@ import com.yomu.app.ui.UiText
 import com.yomu.app.service.OverlayService
 import com.yomu.app.service.TriggerModeStore
 import com.yomu.app.translation.network.NetworkModelStore
-import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -147,27 +146,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Home's quick pick: unlike setup, a model that isn't downloaded starts downloading and takes over when READY. */
-    fun pickTranslationModel(id: String) {
-        viewModelScope.launch {
-            val status = modelManager.getModel(id)?.status
-            if (!slotSelection.pick(ModelType.LLM, id, status, _uiState.value.fitBudget.totalMemBytes)) return@launch
-            downloadIfPending(id)
-        }
-    }
-
-    /** From the quick-settings chip here, or from the overlay's when its switch needs the model offer (#338). */
+    /** From the overlay's language switch, which Home answers with the model offer when it needs one (#338). */
     fun chooseLanguage(language: TargetLanguage) {
         viewModelScope.launch {
             val switch = slotSelection.switchLanguage(language)
             _uiState.update { it.copy(languageOffer = switch as? LanguageSwitch.Offer).withSlots() }
-        }
-    }
-
-    fun chooseSpokenLanguage(language: SpokenLanguage?) {
-        _uiState.update { it.copy(spoken = language) }
-        viewModelScope.launch {
-            sourceLanguage.choose(language, _uiState.value.fitBudget.totalMemBytes)?.let { downloadIfPending(it, ModelType.OCR) }
         }
     }
 
@@ -181,9 +164,9 @@ class HomeViewModel @Inject constructor(
 
     fun declineLanguageOffer() = _uiState.update { it.copy(languageOffer = null) }
 
-    private suspend fun downloadIfPending(id: String, type: ModelType = ModelType.LLM) {
+    private suspend fun downloadIfPending(id: String) {
         _uiState.update { it.withSlots() }
-        if (slotSelection.pendingId(type) != id) return
+        if (slotSelection.pendingId(ModelType.LLM) != id) return
         slotSelection.download(id)
         _uiState.update { it.withSlots() }
     }

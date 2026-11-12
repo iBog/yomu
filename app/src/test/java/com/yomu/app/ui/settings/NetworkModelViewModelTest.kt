@@ -78,6 +78,15 @@ class NetworkModelViewModelTest {
     }
 
     @Test
+    fun `an address is marked good once a server answered, with or without a model list`() {
+        assertTrue(ModelsState.Listed(listOf("m")).answered)
+        assertTrue(ModelsState.Manual.answered)
+        assertFalse(ModelsState.Loading.answered)
+        assertFalse(ModelsState.Idle.answered)
+        assertFalse(ModelsState.Failed("network_unreachable").answered)
+    }
+
+    @Test
     fun `a rejected key is a failure`() = runTest {
         reply = 401 to ""
         val viewModel = NetworkModelViewModel(store, client)
