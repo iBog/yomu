@@ -10,7 +10,6 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.yomu.app.AppLanguage
 import com.yomu.app.R
 import com.yomu.app.db.entities.ModelType
@@ -49,6 +49,7 @@ fun TranslationSettings(viewModel: SettingsViewModel, onBack: () -> Unit) {
             onReset = viewModel::resetGeneration
         )
         PageRecallPanel(state.pageRecall, viewModel::setPageRecall)
+        SaveHistoryPanel()
     }
 }
 
@@ -90,24 +91,13 @@ private fun TargetLanguagePanel(
 }
 
 @Composable
-private fun PageRecallPanel(enabled: Boolean, onChange: (Boolean) -> Unit) {
-    PaperSurface(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth().toggleable(enabled, role = Role.Switch, onValueChange = onChange).padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.settings_page_recall_title), style = MaterialTheme.typography.titleSmall)
-                Text(
-                    stringResource(R.string.settings_page_recall_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(Modifier.width(16.dp))
-            Switch(checked = enabled, onCheckedChange = null)
-        }
-    }
+private fun PageRecallPanel(enabled: Boolean, onChange: (Boolean) -> Unit) =
+    SwitchPanel(stringResource(R.string.settings_page_recall_title), stringResource(R.string.settings_page_recall_description), enabled, onChange)
+
+@Composable
+private fun SaveHistoryPanel(viewModel: SaveHistoryViewModel = hiltViewModel()) {
+    val enabled by viewModel.enabled.collectAsState()
+    SwitchPanel(stringResource(R.string.settings_save_history_title), stringResource(R.string.settings_save_history_description), enabled, viewModel::set)
 }
 
 @Composable

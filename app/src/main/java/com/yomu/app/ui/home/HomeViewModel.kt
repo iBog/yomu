@@ -14,6 +14,7 @@ import com.yomu.app.db.entities.ModelType
 import com.yomu.app.service.LanguageSwitch
 import com.yomu.app.service.ModelManager
 import com.yomu.app.service.ModelSlotSelection
+import com.yomu.app.service.SaveHistoryStore
 import com.yomu.app.service.SourceLanguageSelection
 import com.yomu.app.ui.UiText
 import com.yomu.app.service.OverlayService
@@ -201,6 +202,7 @@ class HomeViewModel @Inject constructor(
         // With the slots, since a download that never completes can return the language to English.
         targetLanguage = slotSelection.targetLanguage(),
         spoken = sourceLanguage.current(),
+        saveHistory = SaveHistoryStore(sharedPreferences).load(),
         setupDownloadBytes = slotSelection.downloadBytes(models.associate { it.id to it.status })
     )
 

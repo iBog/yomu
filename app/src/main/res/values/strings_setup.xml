@@ -2,7 +2,7 @@
 <resources>
     <string name="setup_title">Set up reading</string>
     <string name="setup_tagline">Your manga, in English</string>
-    <string name="setup_intro">Yomu finds the speech bubbles, reads the Japanese and translates it on your device. Your pages stay with you.</string>
+    <string name="setup_intro">Yomu finds the speech bubbles, reads the text and translates it on your device. Your pages stay with you.</string>
     <string name="setup_apps_title">Read in the apps you love</string>
     <string name="setup_apps_body">Turn reading on and leave it on while you browse. Tap Yomu’s floating button whenever you want to translate a page.</string>
     <string name="setup_models_body">First, download the models that read and translate the page. The defaults suit most devices; tap a model to pick another.</string>

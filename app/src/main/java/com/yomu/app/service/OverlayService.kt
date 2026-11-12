@@ -664,7 +664,7 @@ class OverlayService : Service() {
         val translatedText = result.translationResult.translations.joinToString("\n") { translation ->
             "[${translation.bubbleId}] ${translation.originalText} → ${translation.translatedText}"
         }
-        if (translatedText.isBlank()) return
+        if (translatedText.isBlank() || !SaveHistoryStore(sharedPreferences).load()) return
         sessionManager.saveTranslation(
             sessionId = session.id,
             sourceImagePath = "",

@@ -14,9 +14,9 @@
     <string name="home_reading_is_on">Reading is on</string>
     <string name="home_service_error">Couldn\'t start reading. Try the reading control again.</string>
     <string name="home_get_ready">Get ready to read</string>
-    <string name="home_ready_needs_models">Download the parts that find the speech bubbles, read the Japanese and translate it.</string>
+    <string name="home_ready_needs_models">Download the parts that find the speech bubbles, read the text and translate it.</string>
     <string name="home_ready_needs_permission">Allow Yomu to display translations over your manga app.</string>
-    <string name="home_ready_needs_both">Download the parts that find the speech bubbles, read the Japanese and translate it, then allow Yomu to display over other apps.</string>
+    <string name="home_ready_needs_both">Download the parts that find the speech bubbles, read the text and translate it, then allow Yomu to display over other apps.</string>
     <string name="home_ready_finish">Finish the short setup, then turn reading on.</string>
     <string name="home_finish_setup">Finish setup</string>
     <plurals name="home_pages_today">
@@ -34,8 +34,8 @@
     <string name="home_clear_error">Couldn\'t clear Recent. Your translations are still saved.</string>
     <string name="home_history_loading">Loading recent translations…</string>
     <string name="home_history_error">Couldn\'t load recent translations.</string>
+    <string name="home_history_off">Translations aren\'t being saved. Turn saving on in Settings &gt; Translation.</string>
     <string name="home_history_empty">Your next translation will appear here.</string>
-    <string name="home_back_to_reading">Back to reading</string>
     <string name="home_show_less">Show less</string>
     <string name="home_read_translation">Read translation</string>
     <string name="home_show_recent_only">Show recent only</string>

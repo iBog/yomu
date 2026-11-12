@@ -29,6 +29,8 @@
     <string name="settings_model_description">Модель на устройстве, которая переводит каждое облачко.</string>
     <string name="settings_page_recall_title">Память страниц</string>
     <string name="settings_page_recall_description">Сразу показывает уже переведённую страницу при чтении, не переводя её заново.</string>
+    <string name="settings_save_history_title">Запоминать переводы</string>
+    <string name="settings_save_history_description">Сохраняет каждую переведённую страницу в «Недавних» на Главной. Если выключить, новые переводы не сохраняются; уже сохранённые остаются, пока вы их не очистите.</string>
     <string name="settings_detection_title">Поиск облачек</string>
     <string name="settings_detection_description">Находит облачка с речью на странице.</string>
     <string name="settings_ocr_title">Распознавание текста</string>
@@ -101,8 +103,8 @@
 
     <string name="settings_glossary_add">Добавить имя</string>
     <string name="settings_glossary_edit">Изменить имя</string>
-    <string name="settings_glossary_empty">Имён пока нет. Скопируйте японский текст из карточки облачка и добавьте его сюда с нужным вам именем.</string>
-    <string name="settings_glossary_japanese">Японский</string>
+    <string name="settings_glossary_empty">Имён пока нет. Скопируйте исходный текст из карточки облачка и добавьте его сюда с нужным вам именем.</string>
+    <string name="settings_glossary_source">Исходный текст</string>
     <string name="settings_glossary_rendering">Всегда переводить как</string>
     <string name="settings_glossary_save">Сохранить</string>
 

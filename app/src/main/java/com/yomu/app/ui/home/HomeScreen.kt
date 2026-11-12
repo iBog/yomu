@@ -26,7 +26,6 @@ import com.yomu.app.ui.asString
 import com.yomu.app.ui.labelRes
 import com.yomu.app.ui.theme.*
 import com.yomu.core.TargetLanguage
-import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
 
@@ -37,7 +36,6 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val scroll = rememberLazyListState()
-    val scope = rememberCoroutineScope()
     var showAll by rememberSaveable { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
     val readingStatus = state.readingStatus
@@ -141,9 +139,7 @@ fun HomeScreen(
                 state.historyLoading -> item { PaperLoading(stringResource(R.string.home_history_loading)) }
                 state.historyError -> item { PaperError(stringResource(R.string.home_history_error), viewModel::loadRecentHistory) }
                 state.translations.isEmpty() -> item {
-                    PaperEmpty(stringResource(R.string.home_history_empty), stringResource(R.string.home_back_to_reading)) {
-                        scope.launch { scroll.animateScrollToItem(0) }
-                    }
+                    PaperEmpty(stringResource(if (state.saveHistory) R.string.home_history_empty else R.string.home_history_off))
                 }
                 else -> {
                     items(if (showAll) state.translations else state.translations.take(3), key = { it.id }) { translation ->

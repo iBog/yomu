@@ -66,12 +66,11 @@ fun PaperError(message: String, onRetry: () -> Unit) {
 }
 
 @Composable
-fun PaperEmpty(message: String, action: String, onAction: () -> Unit) {
+fun PaperEmpty(message: String) {
     PaperSurface(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(Icons.Default.DateRange, contentDescription = null)
             Text(message, style = MaterialTheme.typography.bodyMedium)
-            PaperButton(action, onAction)
         }
     }
 }

@@ -38,6 +38,8 @@ data class HomeUiState(
     val translationSelectedId: String? = null,
     val translationPendingId: String? = null,
     val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH,
+    /** Whether translated pages are kept in Recent; the empty list says so when they are not. */
+    val saveHistory: Boolean = true,
     /** The source language the reader named (#444); null is Auto. */
     val spoken: SpokenLanguage? = null,
     /** The model switch a language choice is waiting on the reader to accept or decline (#338), or null. */

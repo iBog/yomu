@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="overlay_card_japanese">Japanese</string>
-    <string name="overlay_card_english">English</string>
+    <string name="overlay_card_original">Original</string>
+    <string name="overlay_card_translation">Translation</string>
     <string name="overlay_card_copy">Copy</string>
     <string name="overlay_card_copy_description">Copy %1$s</string>
     <string name="overlay_card_copied">Copied</string>

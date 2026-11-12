@@ -62,7 +62,7 @@ private fun GlossaryEntryDialog(entry: GlossaryEntry, onSave: (String, String) -
         title = { Text(stringResource(if (onDelete == null) R.string.settings_glossary_add else R.string.settings_glossary_edit)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(term, { term = it }, label = { Text(stringResource(R.string.settings_glossary_japanese)) }, singleLine = true)
+                OutlinedTextField(term, { term = it }, label = { Text(stringResource(R.string.settings_glossary_source)) }, singleLine = true)
                 OutlinedTextField(rendering, { rendering = it }, label = { Text(stringResource(R.string.settings_glossary_rendering)) }, singleLine = true)
             }
         },

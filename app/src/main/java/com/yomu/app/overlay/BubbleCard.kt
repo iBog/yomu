@@ -26,8 +26,8 @@ internal fun bubbleCard(context: Context, bubble: TypesetBubble, atTop: Boolean)
         setPadding(margin, margin / 2, margin, margin)
         addView(LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            addCardSection(context, context.getString(R.string.overlay_card_japanese), bubble.originalText, 18f)
-            addCardSection(context, context.getString(R.string.overlay_card_english), bubble.translatedText, 16f)
+            addCardSection(context, context.getString(R.string.overlay_card_original), bubble.originalText, 18f)
+            addCardSection(context, context.getString(R.string.overlay_card_translation), bubble.translatedText, 16f)
         })
         layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,

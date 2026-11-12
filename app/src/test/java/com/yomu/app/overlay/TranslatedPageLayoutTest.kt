@@ -41,7 +41,7 @@ class TranslatedPageLayoutTest {
             assertTrue(card.bottom <= page.height)
             assertTrue(card.canScrollVertically(1))
             val buttons = buttons(card)
-            assertEquals(listOf("Copy Japanese", "Copy English"), buttons.map { it.contentDescription })
+            assertEquals(listOf("Copy Original", "Copy Translation"), buttons.map { it.contentDescription })
             card.isSmoothScrollingEnabled = false
             card.fullScroll(View.FOCUS_DOWN)
             shadowOf(Looper.getMainLooper()).idle()

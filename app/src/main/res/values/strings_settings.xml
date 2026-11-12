@@ -29,6 +29,8 @@
     <string name="settings_model_description">The on-device model that translates each bubble.</string>
     <string name="settings_page_recall_title">Page recall</string>
     <string name="settings_page_recall_description">Shows a page already translated while reading at once, instead of translating it again.</string>
+    <string name="settings_save_history_title">Remember translations</string>
+    <string name="settings_save_history_description">Keeps each translated page in Recent on Home. Turn it off to stop saving new ones; what is already saved stays until you clear it.</string>
     <string name="settings_detection_title">Detection</string>
     <string name="settings_detection_description">Finds the speech bubbles on the page.</string>
     <string name="settings_ocr_title">OCR</string>
@@ -101,8 +103,8 @@
 
     <string name="settings_glossary_add">Add name</string>
     <string name="settings_glossary_edit">Edit name</string>
-    <string name="settings_glossary_empty">No names yet. Copy the Japanese from a bubble card, then add it here with the name you want.</string>
-    <string name="settings_glossary_japanese">Japanese</string>
+    <string name="settings_glossary_empty">No names yet. Copy the original text from a bubble card, then add it here with the name you want.</string>
+    <string name="settings_glossary_source">Original text</string>
     <string name="settings_glossary_rendering">Always translate as</string>
     <string name="settings_glossary_save">Save</string>
 
