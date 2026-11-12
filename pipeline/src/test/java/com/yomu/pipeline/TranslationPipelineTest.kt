@@ -6,6 +6,7 @@ import android.graphics.RectF
 import com.yomu.core.GlossaryEntry
 import com.yomu.core.PageTranslation
 import com.yomu.core.SourceLanguage
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.pipeline.bubble.Bubble
 import com.yomu.pipeline.bubble.BubbleDetector
@@ -156,6 +157,20 @@ class TranslationPipelineTest {
 
         assertEquals(TargetLanguage.FRENCH, slot.pages.single().targetLanguage)
         assertEquals(TargetLanguage.FRENCH, result?.translationResult?.targetLanguage)
+    }
+
+    @Test
+    fun `the spoken language reaches the translation page, and auto names none`() = runTest {
+        linePipeline(clock, speech).processPage(
+            page(),
+            targetLanguage = TargetLanguage.RUSSIAN,
+            sourceLanguage = SourceLanguage.LATIN_SCRIPT,
+            spokenLanguage = SpokenLanguage.FRENCH
+        )
+        assertEquals(SpokenLanguage.FRENCH, slot.pages.last().spoken)
+
+        linePipeline(clock, speech).processPage(page(), targetLanguage = TargetLanguage.RUSSIAN, spokenLanguage = null)
+        assertNull(slot.pages.last().spoken)
     }
 
     @Test

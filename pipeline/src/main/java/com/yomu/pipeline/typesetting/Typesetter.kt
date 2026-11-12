@@ -27,12 +27,17 @@ class Typesetter(var fontSizeScale: Float = 1.0f) {
     companion object {
         private const val MIN_FONT_SIZE = 10f
         private const val MAX_FONT_SIZE = 36f
+        // A box with a short side past MAX_FONT_SIZE / this is not a manga bubble but a text panel (a visual novel's
+        // dialogue box, a caption): its text may grow with the box instead of floating in padding at the bubble cap.
+        private const val MAX_FONT_BOX_FRACTION = 0.12f
         // A box narrower than its longest word at this size is widened rather than breaking the
         // word letter by letter (a tall text box around vertical はい rendered "Y / e / s").
         private const val MIN_WORD_FONT_SIZE = 20f
         // CJK punctuation, kana and ideographs all sit at or above U+3000.
         private const val CJK_START = 0x3000
         private const val PADDING = 0.1f
+        // A text panel is a plain rectangle, not an ellipse the text must keep clear of, so it needs little margin.
+        private const val PANEL_PADDING = 0.04f
         // Fixed growth budget, take page bounds into the Typesetter if bubbles need
         // to grow against real page room rather than a multiple of their own box.
         private const val MAX_BOX_GROWTH = 3f
@@ -55,10 +60,12 @@ class Typesetter(var fontSizeScale: Float = 1.0f) {
                 ?: floatArrayOf(0f, 0f, 100f, 50f)
 
             val cleaned = cleanText(translation.translatedText)
-            val boxWidth = (bounds[2] - bounds[0]) * (1 - PADDING * 2)
-            val maxHeight = (bounds[3] - bounds[1]) * (1 - PADDING * 2)
+            val padding = paddingFor(bounds)
+            val boxWidth = (bounds[2] - bounds[0]) * (1 - padding * 2)
+            val maxHeight = (bounds[3] - bounds[1]) * (1 - padding * 2)
             val searchWidth = maxOf(boxWidth, longestWordWidth(cleaned, MIN_WORD_FONT_SIZE))
-            val fontSize = calculateFontSize(cleaned, searchWidth, maxHeight)
+            val fontCap = maxOf(MAX_FONT_SIZE, minOf(bounds[2] - bounds[0], bounds[3] - bounds[1]) * MAX_FONT_BOX_FRACTION)
+            val fontSize = calculateFontSize(cleaned, searchWidth, maxHeight, fontCap)
             // fontSizeScale can push a word past the searched width, so widen to the final size too.
             val maxWidth = maxOf(searchWidth, longestWordWidth(cleaned, fontSize))
             val lines = fitLines(wrapText(cleaned, maxWidth, fontSize), fontSize, maxWidth, maxHeight)
@@ -70,7 +77,7 @@ class Typesetter(var fontSizeScale: Float = 1.0f) {
                 originalText = translation.originalText,
                 fontSize = fontSize,
                 textLines = lines,
-                boundingBox = grownBounds(bounds, maxWidth, textHeight)
+                boundingBox = grownBounds(bounds, maxWidth, textHeight, padding)
             )
         }
     }
@@ -79,9 +86,9 @@ class Typesetter(var fontSizeScale: Float = 1.0f) {
         OCR_TOKEN_REGEX.replace(text, "")
             .let { WHITESPACE_REGEX.replace(it.trim(), " ") }
 
-    private fun calculateFontSize(text: String, maxWidth: Float, maxHeight: Float): Float {
+    private fun calculateFontSize(text: String, maxWidth: Float, maxHeight: Float, maxSize: Float): Float {
         var low = MIN_FONT_SIZE
-        var high = MAX_FONT_SIZE
+        var high = maxSize
         var bestSize = MIN_FONT_SIZE
 
         while (low <= high) {
@@ -111,9 +118,16 @@ class Typesetter(var fontSizeScale: Float = 1.0f) {
             .maxOfOrNull { paint.measureText(it) } ?: 0f
     }
 
-    private fun grownBounds(bounds: FloatArray, textWidth: Float, textHeight: Float): FloatArray {
-        val width = maxOf(bounds[2] - bounds[0], textWidth / (1 - PADDING * 2))
-        val height = maxOf(bounds[3] - bounds[1], textHeight / (1 - PADDING * 2))
+    /** The margin kept inside [bounds]: little for a text panel, more for a bubble. */
+    internal fun paddingFor(bounds: FloatArray): Float =
+        if (isPanel(bounds)) PANEL_PADDING else PADDING
+
+    private fun isPanel(bounds: FloatArray): Boolean =
+        minOf(bounds[2] - bounds[0], bounds[3] - bounds[1]) * MAX_FONT_BOX_FRACTION > MAX_FONT_SIZE
+
+    private fun grownBounds(bounds: FloatArray, textWidth: Float, textHeight: Float, padding: Float): FloatArray {
+        val width = maxOf(bounds[2] - bounds[0], textWidth / (1 - padding * 2))
+        val height = maxOf(bounds[3] - bounds[1], textHeight / (1 - padding * 2))
         val centerX = (bounds[0] + bounds[2]) / 2f
         val centerY = (bounds[1] + bounds[3]) / 2f
         return floatArrayOf(centerX - width / 2f, centerY - height / 2f, centerX + width / 2f, centerY + height / 2f)

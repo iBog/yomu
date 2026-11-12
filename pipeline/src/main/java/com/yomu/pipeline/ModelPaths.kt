@@ -1,6 +1,7 @@
 package com.yomu.pipeline
 
 import com.yomu.core.SourceLanguage
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 
 /**
@@ -17,4 +18,4 @@ data class ModelPaths(
 )
 
 /** What a page is read in and what it is translated into. */
-internal data class PageLanguages(val source: SourceLanguage, val target: TargetLanguage)
+internal data class PageLanguages(val source: SourceLanguage, val target: TargetLanguage, val spoken: SpokenLanguage?)

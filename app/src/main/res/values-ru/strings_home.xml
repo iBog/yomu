@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home -->
+    <string name="home_title">Главная</string>
+    <string name="home_reading_on">Чтение включено</string>
+    <string name="home_reading_off">Чтение выключено</string>
+    <string name="home_finish_setup_to_read">Завершите настройку, чтобы читать</string>
+    <string name="home_tap_to_turn_off">Нажмите, чтобы выключить</string>
+    <string name="home_tap_to_turn_on">Нажмите, чтобы включить</string>
+    <string name="home_needs_things_first">Сначала нужно кое-что сделать</string>
+    <string name="home_hint_floating_button">Читайте мангу в своём приложении. Нажмите плавающую кнопку, чтобы перевести страницу.</string>
+    <string name="home_hint_notification">Читайте мангу в своём приложении. Опустите шторку и нажмите уведомление Yomu, чтобы перевести страницу.</string>
+    <string name="home_hint_off">Включите чтение и читайте мангу в привычном приложении.</string>
+    <string name="home_reading_is_on">Чтение включено</string>
+    <string name="home_service_error">Не удалось запустить чтение. Попробуйте включить его ещё раз.</string>
+    <string name="home_get_ready">Подготовка к чтению</string>
+    <string name="home_ready_needs_models">Скачайте модели, которые находят облачка с речью, распознают японский текст и переводят его.</string>
+    <string name="home_ready_needs_permission">Разрешите Yomu показывать перевод поверх приложения с мангой.</string>
+    <string name="home_ready_needs_both">Скачайте модели, которые находят облачка с речью, распознают японский текст и переводят его, а затем разрешите Yomu показ поверх других приложений.</string>
+    <string name="home_ready_finish">Завершите короткую настройку и включите чтение.</string>
+    <string name="home_finish_setup">Завершить настройку</string>
+    <plurals name="home_pages_today">
+        <item quantity="one">Сегодня переведена %1$d страница</item>
+        <item quantity="few">Сегодня переведено %1$d страницы</item>
+        <item quantity="many">Сегодня переведено %1$d страниц</item>
+        <item quantity="other">Сегодня переведено %1$d страницы</item>
+    </plurals>
+
+    <!-- Recent translations -->
+    <string name="home_recent">Недавние</string>
+    <string name="home_clear">Очистить</string>
+    <string name="home_keep">Оставить</string>
+    <string name="home_clear_title">Очистить недавние переводы?</string>
+    <string name="home_clear_message">Сохранённые переводы будут удалены с этого устройства.</string>
+    <string name="home_recent_cleared">Недавние переводы очищены</string>
+    <string name="home_clear_error">Не удалось очистить недавние. Переводы по-прежнему сохранены.</string>
+    <string name="home_history_loading">Загрузка недавних переводов…</string>
+    <string name="home_history_error">Не удалось загрузить недавние переводы.</string>
+    <string name="home_history_empty">Здесь появится ваш следующий перевод.</string>
+    <string name="home_back_to_reading">Вернуться к чтению</string>
+    <string name="home_show_less">Свернуть</string>
+    <string name="home_read_translation">Читать перевод</string>
+    <string name="home_show_recent_only">Только недавние</string>
+    <string name="home_show_all">Показать все переводы</string>
+
+    <!-- Quick settings -->
+    <string name="home_verbatim">%1$s</string>
+    <string name="home_chip_from">С языка: %1$s</string>
+    <string name="home_chip_to">На язык: %1$s</string>
+    <string name="home_chip_no_model">Модель не выбрана</string>
+    <string name="home_chip_pending">%1$s · %2$s после загрузки</string>
+    <string name="home_needs_more_memory">Нужно больше памяти</string>
+    <string name="home_selected">Выбрано</string>
+    <string name="home_download_detection">Поиск облачков с речью</string>
+    <string name="home_download_ocr">Распознавание текста</string>
+    <string name="home_download_translation">Перевод на английский</string>
+
+    <!-- Try it -->
+    <string name="try_title">Тест перевода</string>
+    <string name="try_input_label">Текст для перевода</string>
+    <string name="try_translate">Перевести</string>
+    <string name="try_translating">Перевод…</string>
+    <string name="try_seconds">%1$.1f с</string>
+    <string name="try_no_usable_translation">Модель не дала пригодного перевода</string>
+    <string name="try_translation_failed">Не удалось перевести: %1$s</string>
+
+    <!-- Navigation, shared states, toasts -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="nav_getting_ready">Подготовка Yomu…</string>
+    <string name="paper_loading">Загрузка…</string>
+    <string name="paper_error">Ошибка</string>
+    <string name="paper_success">Готово</string>
+    <string name="paper_try_again">Повторить</string>
+    <string name="main_allow_overlay">Разрешите показ поверх других приложений, затем снова включите Yomu</string>
+</resources>

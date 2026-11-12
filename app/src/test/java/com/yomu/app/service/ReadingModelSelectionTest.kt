@@ -76,6 +76,11 @@ class ReadingModelSelectionTest {
     }
 
     @Test
+    fun `every script has the OCR model that reads it`() {
+        SourceLanguage.entries.forEach { assertEquals(it, ReadingModelSelection.sourceOf(ReadingModelSelection.ocrModelFor(it))) }
+    }
+
+    @Test
     fun `a line reader downloads its dictionary with it`() {
         val files = ModelManager.additionalFiles(Constants.PPOCR_LATIN_MODEL_ID)
 

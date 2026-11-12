@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Build
 import androidx.core.content.FileProvider
+import com.yomu.app.R
 import com.yomu.pipeline.PipelineResult
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -43,7 +44,7 @@ fun Context.pageReportShareIntent(record: PageRecord): Intent {
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     // The chooser passes the read grant on only through ClipData.
     send.clipData = ClipData.newRawUri(null, uri)
-    return Intent.createChooser(send, "Report last page").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    return Intent.createChooser(send, getString(R.string.service_report_chooser_title)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
 /**

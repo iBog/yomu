@@ -5,7 +5,7 @@ import com.yomu.core.ERROR_ENGLISH_ONLY
 import com.yomu.core.ERROR_MODEL_MISSING
 import com.yomu.core.ModelProfile
 import com.yomu.core.PageTranslation
-import com.yomu.core.SourceLanguage
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.core.TranslatablePage
 import com.yomu.core.TranslationOutcome
@@ -67,7 +67,9 @@ class LlamaTranslationBridge(
         /**
          * Longest line the batch grammar will let the model write, a backstop for a line that loops.
          * 160 is ~2x the longest human reference line on the fixture pages. A knob co-owned with the
-         * sampler (ADR-0013), not a pinned constant.
+         * sampler (ADR-0013), not a pinned constant. A page with a longer source line (a visual novel's
+         * paragraph) gets twice that line instead, since a reply can't be shorter than its source and
+         * a fixed 160 cuts the translation off mid-sentence.
          */
         private const val MAX_LINE_CHARS = 160
 
@@ -140,7 +142,7 @@ class LlamaTranslationBridge(
         val bubbles = page.panels.flatten()
         val generated = bubbles.map { bubble ->
             val prompt = when (profile.promptMode) {
-                TranslationPromptMode.MODEL_CARD -> modelCardPrompt(bubble.sourceText, page.sourceLanguage)
+                TranslationPromptMode.MODEL_CARD -> modelCardPrompt(bubble.sourceText, page.spoken)
                 TranslationPromptMode.TRANSLATION_ONLY -> translationOnlyPrompt(bubble.sourceText, page)
                 TranslationPromptMode.HY_MT2 -> hyMt2Prompt(bubble.sourceText, page.targetLanguage)
                 TranslationPromptMode.TRANSLATEGEMMA -> translateGemmaPrompt(bubble.sourceText, page)
@@ -214,13 +216,13 @@ class LlamaTranslationBridge(
         )
     }
 
-    /** CAT-Translate's model-card prompt, byte-identical and English only; another source drops "Japanese". */
-    private fun modelCardPrompt(target: String, source: SourceLanguage): String =
-        "Translate the following ${source.promptPrefix("Japanese ")}text into English.\n\n$target"
+    /** CAT-Translate's model-card prompt, byte-identical and English only; an unnamed source drops "Japanese". */
+    private fun modelCardPrompt(target: String, source: SpokenLanguage?): String =
+        "Translate the following ${source.promptPrefix()}text into English.\n\n$target"
 
     private fun translationOnlyPrompt(target: String, page: TranslatablePage): String = buildString {
         appendLine(
-            "Translate the target ${page.sourceLanguage.promptPrefix()}manga text into natural ${page.targetLanguage.promptName}. " +
+            "Translate the target ${page.spoken.promptPrefix()}manga text into natural ${page.targetLanguage.promptName}. " +
                 "Return only the translation."
         )
         appendLine("No introductions, explanations, labels, or added quotes. Preserve meaning and tone.")
@@ -241,9 +243,9 @@ class LlamaTranslationBridge(
     private fun translateGemmaPrompt(target: String, page: TranslatablePage): String {
         val language = page.targetLanguage
         val to = if (language == TargetLanguage.BRAZILIAN_PORTUGUESE) "Portuguese" else language.promptName
-        val from = page.sourceLanguage.promptName
+        val from = page.spoken?.promptName
         val role = if (from == null) "translator into $to (${language.code})"
-        else "$from (${page.sourceLanguage.code}) to $to (${language.code}) translator"
+        else "$from (${page.spoken?.code}) to $to (${language.code}) translator"
         val original = if (from == null) "original" else "original $from"
         val following = if (from == null) "following" else "following $from"
         return "You are a professional $role. Your goal is to accurately convey the meaning and nuances of the " +
@@ -254,7 +256,7 @@ class LlamaTranslationBridge(
 
     private fun buildBatchPrompt(page: TranslatablePage): String = buildString {
         appendLine(
-            "Translate each ${page.sourceLanguage.promptPrefix()}line to ${page.targetLanguage.promptName}. Keep the [id] tag before each line. " +
+            "Translate each ${page.spoken.promptPrefix()}line to ${page.targetLanguage.promptName}. Keep the [id] tag before each line. " +
                 "Panels are separated by ---."
         )
         page.panels.forEachIndexed { index, panel ->
@@ -278,7 +280,8 @@ class LlamaTranslationBridge(
     private fun buildBatchGrammar(page: TranslatablePage): String {
         val root = page.panels.flatten().joinToString(" ") { "\"[${it.bubbleId}] \" line \"\\n\"" } + "?"
         val excluded = if (profile.generation.lineExcludesIdBracket) "\\r\\n\\[" else "\\r\\n"
-        return "root ::= $root\nline ::= [^$excluded]{1,$MAX_LINE_CHARS}\n"
+        val longestSource = page.panels.flatten().maxOfOrNull { it.sourceText.length } ?: 0
+        return "root ::= $root\nline ::= [^$excluded]{1,${maxOf(MAX_LINE_CHARS, 2 * longestSource)}}\n"
     }
 
     private fun parseIdKeyedLine(line: String): Pair<Int, String>? {
@@ -376,9 +379,5 @@ class LlamaTranslationBridge(
     )
 }
 
-/** The source named before a noun in a prompt, "Korean ", or nothing for a script family; [japanese] keeps a prompt's own wording. */
-private fun SourceLanguage.promptPrefix(japanese: String = "Japanese "): String = when {
-    this == SourceLanguage.JAPANESE -> japanese
-    promptName == null -> ""
-    else -> "$promptName "
-}
+/** The source named before a noun in a prompt, "Korean ", or nothing for Auto. */
+private fun SpokenLanguage?.promptPrefix(): String = this?.let { "${it.promptName} " }.orEmpty()

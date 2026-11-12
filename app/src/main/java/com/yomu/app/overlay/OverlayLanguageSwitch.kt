@@ -7,6 +7,9 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import com.yomu.app.R
+import com.yomu.app.ui.UiText
+import com.yomu.app.ui.labelRes
 import com.yomu.app.ui.theme.YomuColors
 import com.yomu.app.ui.theme.paperBackground
 import com.yomu.core.TargetLanguage
@@ -17,8 +20,9 @@ import com.yomu.core.TargetLanguage
  */
 class OverlayLanguageSwitch(
     private val context: Context,
+    private val sourceName: () -> String,
     private val targetLanguage: () -> TargetLanguage,
-    private val unavailable: (TargetLanguage) -> String?,
+    private val unavailable: (TargetLanguage) -> UiText?,
     private val onChosen: (TargetLanguage) -> Unit
 ) {
     private var chip: TextView? = null
@@ -59,15 +63,15 @@ class OverlayLanguageSwitch(
         }
     }
 
-    private fun chipText(): String = "Japanese → ${targetLanguage().promptName}"
+    private fun chipText(): String = context.getString(R.string.overlay_language_chip, sourceName(), context.getString(targetLanguage().labelRes()))
 
     private fun languageOptions(): RadioGroup = RadioGroup(context).apply {
         visibility = View.GONE
         val current = targetLanguage()
         TargetLanguage.entries.forEach { language ->
-            val reason = unavailable(language)
+            val reason = unavailable(language)?.resolve(context)
             addView(RadioButton(context).apply {
-                text = listOfNotNull(language.promptName, reason).joinToString(" · ")
+                text = listOfNotNull(context.getString(language.labelRes()), reason).joinToString(" · ")
                 textSize = 14f
                 minHeight = dp(48)
                 isChecked = language == current

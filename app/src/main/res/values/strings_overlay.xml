@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="overlay_card_japanese">Japanese</string>
+    <string name="overlay_card_english">English</string>
+    <string name="overlay_card_copy">Copy</string>
+    <string name="overlay_card_copy_description">Copy %1$s</string>
+    <string name="overlay_card_copied">Copied</string>
+
+    <string name="overlay_button_translate_description">Translate screen. Hold for quick settings.</string>
+    <string name="overlay_button_stop_description">Stop translating</string>
+
+    <string name="overlay_language_chip">%1$s → %2$s</string>
+
+    <string name="overlay_stage_bubble_detection">Finding text bubbles</string>
+    <string name="overlay_stage_ocr">Reading text</string>
+    <string name="overlay_stage_context">Preparing context</string>
+    <string name="overlay_stage_translation">Translating</string>
+    <string name="overlay_stage_done">Drawing translation</string>
+    <string name="overlay_stage_error">Failed</string>
+
+    <string name="overlay_quick_settings">Quick settings</string>
+    <string name="overlay_quick_settings_close">Close quick settings</string>
+    <string name="overlay_font_size">Font size</string>
+    <string name="overlay_font_size_description">Translation font size</string>
+    <string name="overlay_threshold_description">Bubble threshold</string>
+    <string name="overlay_threshold">Bubble threshold · %1$.2f</string>
+    <string name="overlay_report_last_page">Report last page</string>
+    <string name="overlay_open_yomu">Open Yomu</string>
+    <string name="overlay_stop_service">Stop service</string>
+    <string name="overlay_reset">Reset</string>
+</resources>

@@ -3,6 +3,7 @@ package com.yomu.app.service
 import com.yomu.core.GenerationParams
 import com.yomu.core.GlossaryEntry
 import com.yomu.core.RuntimeLimits
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.core.TranslationOutcome
 import com.yomu.pipeline.PipelineResult
@@ -17,6 +18,7 @@ data class PageSettings(
     val detectionThreshold: Float,
     val fontScale: Float,
     val targetLanguage: TargetLanguage,
+    val spoken: SpokenLanguage?,
     val glossary: List<GlossaryEntry>
 )
 

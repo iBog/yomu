@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">Настройка чтения</string>
+    <string name="setup_tagline">Ваша манга — на английском</string>
+    <string name="setup_intro">Yomu находит облачка с речью, распознаёт японский текст и переводит его прямо на вашем устройстве. Ваши страницы остаются у вас.</string>
+    <string name="setup_apps_title">Читайте в любимых приложениях</string>
+    <string name="setup_apps_body">Включите чтение и оставьте его включённым, пока листаете мангу. Нажимайте плавающую кнопку Yomu, когда хотите перевести страницу.</string>
+    <string name="setup_models_body">Сначала скачайте модели, которые распознают и переводят страницу. Модели по умолчанию подходят большинству устройств; нажмите на модель, чтобы выбрать другую.</string>
+    <string name="setup_detection_title">Обнаружение</string>
+    <string name="setup_detection_description">Находит облачка с речью на странице.</string>
+    <string name="setup_ocr_title">Распознавание текста</string>
+    <string name="setup_ocr_description">Читает текст внутри каждого облачка. Выберите модель для языка, на котором написан ваш комикс.</string>
+    <string name="setup_translation_title">Перевод</string>
+    <string name="setup_translation_description">Модель на устройстве, которая переводит каждое облачко.</string>
+    <string name="setup_blocked">Модели «%1$s» нужно больше памяти, чем позволяет бюджет памяти этого телефона. Выберите модель поменьше и повторите.</string>
+    <string name="setup_error">Не удалось завершить настройку. Проверьте подключение и свободное место, затем повторите. Завершённые загрузки сохранены.</string>
+    <string name="setup_download_size">Размер загрузки: %1$s</string>
+    <string name="setup_all_downloaded">Все выбранные модели уже скачаны.</string>
+    <string name="setup_metered">Вы используете мобильный интернет. Загрузка %1$s будет учтена в вашем тарифе.</string>
+    <string name="setup_download">Скачать</string>
+    <string name="setup_preparing">Подготовка чтения…</string>
+    <string name="setup_keep_open">Не закрывайте Yomu, пока идёт загрузка.</string>
+    <string name="setup_permission_title">Разрешите чтение поверх других приложений</string>
+    <string name="setup_permission_body">Yomu нужно разрешение, чтобы показывать плавающую кнопку и английский текст поверх вашей манги. Включите «Поверх других приложений» и вернитесь сюда.</string>
+    <string name="setup_open_permission">Открыть настройки разрешений</string>
+    <string name="setup_ready_description">Готово</string>
+    <string name="setup_ready_title">Всё готово к чтению</string>
+    <string name="setup_ready_body">Когда вы включите чтение, Android попросит разрешить Yomu показ вашего экрана на время сеанса чтения.</string>
+    <string name="setup_go_home">На главную</string>
+    <string name="setup_back_home">Назад на главную</string>
+</resources>

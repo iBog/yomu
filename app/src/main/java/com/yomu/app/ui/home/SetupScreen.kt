@@ -3,6 +3,7 @@ package com.yomu.app.ui.home
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,11 +13,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.yomu.app.R
 import com.yomu.app.db.entities.ModelType
+import com.yomu.app.ui.UiText
+import com.yomu.app.ui.asString
 import com.yomu.app.ui.settings.SlotPicker
 import com.yomu.app.ui.theme.*
 import com.yomu.core.toFileSizeString
@@ -28,79 +33,79 @@ fun SetupScreen(state: HomeUiState, viewModel: HomeViewModel) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Text("Set up reading", style = MaterialTheme.typography.headlineLarge)
-        Text("Your manga, in English", style = MaterialTheme.typography.headlineSmall)
-        Text("Yomu finds the speech bubbles, reads the Japanese and translates it on your device. Your pages stay with you.")
+        Text(stringResource(R.string.setup_title), style = MaterialTheme.typography.headlineLarge)
+        Text(stringResource(R.string.setup_tagline), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.setup_intro))
         PaperSurface(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Read in the apps you love", style = MaterialTheme.typography.titleLarge)
-                Text("Turn reading on and leave it on while you browse. Tap Yomu’s floating button whenever you want to translate a page.")
-                Text("First, download the models that read and translate the page. The defaults suit most devices; tap a model to pick another.")
+                Text(stringResource(R.string.setup_apps_title), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.setup_apps_body))
+                Text(stringResource(R.string.setup_models_body))
             }
         }
         if (!state.setupStarted || state.setupError) {
-            SetupSlot(state, viewModel, ModelType.DETECTION, "Detection", "Finds the speech bubbles on the page.")
-            SetupSlot(state, viewModel, ModelType.OCR, "OCR", "Reads the text inside each bubble. Pick the model for the language your comic is written in.")
-            SetupSlot(state, viewModel, ModelType.LLM, "Translation", "The on-device model that translates each bubble.")
+            SetupSlot(state, viewModel, ModelType.DETECTION, R.string.setup_detection_title, R.string.setup_detection_description)
+            SetupSlot(state, viewModel, ModelType.OCR, R.string.setup_ocr_title, R.string.setup_ocr_description)
+            SetupSlot(state, viewModel, ModelType.LLM, R.string.setup_translation_title, R.string.setup_translation_description)
         }
         when {
             state.setupBlockedBy != null -> PaperError(
-                "${state.setupBlockedBy} needs more memory than this phone's fit budget allows. Pick a smaller model, then try again.",
+                stringResource(R.string.setup_blocked, state.setupBlockedBy),
                 viewModel::prepareSetup
             )
             state.setupError -> PaperError(
-                "Setup couldn't finish. Check your connection and available storage, then try again. Completed downloads are kept.",
+                stringResource(R.string.setup_error),
                 viewModel::prepareSetup
             )
             !state.setupStarted -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    if (state.setupDownloadBytes > 0) "Download size: ${state.setupDownloadBytes.toFileSizeString()}"
-                    else "Every chosen model is already downloaded.",
+                    if (state.setupDownloadBytes > 0) stringResource(R.string.setup_download_size, state.setupDownloadBytes.toFileSizeString())
+                    else stringResource(R.string.setup_all_downloaded),
                     style = MaterialTheme.typography.titleMedium
                 )
                 if (state.onMeteredNetwork && state.setupDownloadBytes > 0) {
-                    Text("You're on mobile data. This ${state.setupDownloadBytes.toFileSizeString()} download will count toward your data plan.")
+                    Text(stringResource(R.string.setup_metered, state.setupDownloadBytes.toFileSizeString()))
                 }
-                PaperButton("Download", viewModel::prepareSetup, Modifier.fillMaxWidth())
+                PaperButton(stringResource(R.string.setup_download), viewModel::prepareSetup, Modifier.fillMaxWidth())
             }
             !state.setupDownloadsReady -> PaperSurface(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp).semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(state.downloading ?: "Preparing reading…", style = MaterialTheme.typography.titleMedium)
+                    Text((state.downloading ?: UiText(R.string.setup_preparing)).asString(), style = MaterialTheme.typography.titleMedium)
                     if (state.downloadProgress == 0) LinearProgressIndicator(Modifier.fillMaxWidth())
                     else {
                         LinearProgressIndicator(progress = state.downloadProgress / 100f, modifier = Modifier.fillMaxWidth())
                         Text("${state.downloadProgress}%")
                     }
-                    Text("Keep Yomu open while the download finishes.", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.setup_keep_open), style = MaterialTheme.typography.bodySmall)
                 }
             }
             state.readiness != Readiness.Ready -> PaperSurface(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Allow reading over other apps", style = MaterialTheme.typography.titleLarge)
-                    Text("Yomu needs permission to show its floating button and English text over your manga. Enable ‘Allow display over other apps’, then come back here.")
-                    PaperButton("Open permission settings", {
+                    Text(stringResource(R.string.setup_permission_title), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.setup_permission_body))
+                    PaperButton(stringResource(R.string.setup_open_permission), {
                         context.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")))
                     })
                 }
             }
             else -> PaperSurface(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Default.Check, contentDescription = "Ready")
-                    Text("You're ready to read", style = MaterialTheme.typography.titleLarge)
-                    Text("When you turn reading on, Android will ask to share your screen with Yomu for that reading session.")
-                    PaperButton("Go to Home", viewModel::completeSetup)
+                    Icon(Icons.Default.Check, contentDescription = stringResource(R.string.setup_ready_description))
+                    Text(stringResource(R.string.setup_ready_title), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.setup_ready_body))
+                    PaperButton(stringResource(R.string.setup_go_home), viewModel::completeSetup)
                 }
             }
         }
-        TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = viewModel::dismissSetup) { Text("Back to Home") }
+        TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = viewModel::dismissSetup) { Text(stringResource(R.string.setup_back_home)) }
     }
 }
 
 @Composable
-private fun SetupSlot(state: HomeUiState, viewModel: HomeViewModel, type: ModelType, title: String, description: String) {
+private fun SetupSlot(state: HomeUiState, viewModel: HomeViewModel, type: ModelType, @StringRes title: Int, @StringRes description: Int) {
     SlotPicker(
-        title = title,
-        description = description,
+        title = stringResource(title),
+        description = stringResource(description),
         deliverables = state.deliverables[type].orEmpty(),
         selectedId = state.chosenIds[type],
         pendingId = null,

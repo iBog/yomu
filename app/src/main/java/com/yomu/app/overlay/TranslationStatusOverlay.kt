@@ -1,6 +1,7 @@
 package com.yomu.app.overlay
 
 import android.content.Context
+import com.yomu.app.R
 import com.yomu.app.ui.theme.paperColors
 import com.yomu.app.ui.theme.paperBackground
 import android.graphics.PixelFormat
@@ -68,12 +69,12 @@ class TranslationStatusOverlay(
     /** Returns the reader-facing status message for a pipeline stage. */
     fun messageForStage(stage: TranslationPipeline.Stage): String {
         return when (stage) {
-            TranslationPipeline.Stage.BUBBLE_DETECTION -> "Finding text bubbles"
-            TranslationPipeline.Stage.OCR -> "Reading Japanese text"
-            TranslationPipeline.Stage.CONTEXT_ASSEMBLY -> "Preparing context"
-            TranslationPipeline.Stage.TRANSLATION -> "Translating"
-            TranslationPipeline.Stage.DONE -> "Drawing translation"
-            TranslationPipeline.Stage.ERROR -> "Failed"
+            TranslationPipeline.Stage.BUBBLE_DETECTION -> context.getString(R.string.overlay_stage_bubble_detection)
+            TranslationPipeline.Stage.OCR -> context.getString(R.string.overlay_stage_ocr)
+            TranslationPipeline.Stage.CONTEXT_ASSEMBLY -> context.getString(R.string.overlay_stage_context)
+            TranslationPipeline.Stage.TRANSLATION -> context.getString(R.string.overlay_stage_translation)
+            TranslationPipeline.Stage.DONE -> context.getString(R.string.overlay_stage_done)
+            TranslationPipeline.Stage.ERROR -> context.getString(R.string.overlay_stage_error)
         }
     }
 }

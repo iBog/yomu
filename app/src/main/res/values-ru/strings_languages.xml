@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_auto">Авто</string>
+    <string name="language_en">Английский</string>
+    <string name="language_pt_br">Бразильский португальский</string>
+    <string name="language_es">Испанский</string>
+    <string name="language_fr">Французский</string>
+    <string name="language_de">Немецкий</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_ja">Японский</string>
+    <string name="language_zh">Китайский</string>
+    <string name="language_ko">Корейский</string>
+    <string name="language_it">Итальянский</string>
+    <string name="language_pt">Португальский</string>
+    <string name="language_uk">Украинский</string>
+</resources>

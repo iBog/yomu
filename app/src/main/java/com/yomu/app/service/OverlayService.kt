@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
+import com.yomu.app.withAppLanguage
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
@@ -15,10 +16,12 @@ import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import androidx.annotation.StringRes
 import android.util.Log
 import android.view.WindowInsets
 import android.view.WindowManager
 import com.yomu.app.MainActivity
+import com.yomu.app.R
 import com.yomu.app.capture.ScreenCaptureManager
 import com.yomu.app.detection.DetectionThresholdStore
 import com.yomu.app.overlay.FloatingButtonView
@@ -34,8 +37,11 @@ import com.yomu.app.db.entities.ModelType
 import com.yomu.app.db.entities.TranslationSessionEntity
 import com.yomu.app.translation.ResourceLimitsStore
 import com.yomu.app.translation.NameGlossaryStore
+import com.yomu.app.translation.SpokenLanguageStore
 import com.yomu.app.translation.TargetLanguageStore
 import com.yomu.app.translation.TranslationModelSelection
+import com.yomu.app.ui.labelRes
+import com.yomu.app.ui.toUiText
 import com.yomu.core.Constants
 import com.yomu.core.TargetLanguage
 import com.yomu.pipeline.ModelPaths
@@ -65,6 +71,8 @@ import kotlin.coroutines.resume
 class OverlayService : Service() {
 
     @Inject lateinit var screenCaptureManager: ScreenCaptureManager
+
+    override fun attachBaseContext(base: Context) = super.attachBaseContext(base.withAppLanguage())
     @Inject lateinit var translationPipeline: TranslationPipeline
     @Inject lateinit var sharedPreferences: SharedPreferences
     @Inject lateinit var sessionManager: SessionManager
@@ -363,6 +371,7 @@ class OverlayService : Service() {
     private val languageSwitch by lazy {
         OverlayLanguageSwitch(
             context = this,
+            sourceName = { getString(SpokenLanguageStore(sharedPreferences).effective(readingSelection.source())?.labelRes() ?: R.string.language_auto) },
             targetLanguage = slotSelection::targetLanguage,
             unavailable = { slotSelection.languageUnavailable(it, modelManager.deviceTotalMemBytes()) },
             onChosen = ::chooseLanguage
@@ -427,7 +436,7 @@ class OverlayService : Service() {
                 if (share != null) {
                     startActivity(share)
                 } else {
-                    statusOverlay.showOrUpdate("Could not write the page report")
+                    statusOverlay.showOrUpdate(getString(R.string.service_report_failed))
                     delay(1500)
                     statusOverlay.remove()
                 }
@@ -437,7 +446,7 @@ class OverlayService : Service() {
 
     private fun translationModelName(): String = slotSelection.selectedId(ModelType.LLM)
         ?.let { id -> slotSelection.deliverables(ModelType.LLM).firstOrNull { it.id == id }?.name }
-        ?: "No model selected"
+        ?: getString(R.string.service_no_model_selected)
 
     private fun removeQuickSettingsPopup() {
         quickSettingsPopup?.remove()
@@ -466,13 +475,13 @@ class OverlayService : Service() {
             val job = coroutineContext.job
             val statuses = modelManager.getAllModels().first().associate { it.id to it.status }
             if (!slotSelection.ready(statuses) || !readingModelFiles.all { it.exists() }) {
-                failTranslation(job, "Download a model in Settings")
+                failTranslation(job, R.string.service_error_download_model)
                 return@launch
             }
 
-            updateStatus(job, "Capturing screen")
+            updateStatus(job, getString(R.string.service_capturing_screen))
             if (!screenCaptureManager.isProjectionActive) {
-                failTranslation(job, "No active MediaProjection")
+                failTranslation(job, R.string.service_error_no_projection)
                 return@launch
             }
 
@@ -480,7 +489,7 @@ class OverlayService : Service() {
             val bitmap = captureBitmap()
             Log.i(TAG, "Capture result isNull=${bitmap == null}")
             if (bitmap == null) {
-                failTranslation(job, "Capture returned no frame")
+                failTranslation(job, R.string.service_error_no_frame)
                 return@launch
             }
             // A page that ends without a result must not leave the one before it to be reported.
@@ -498,7 +507,10 @@ class OverlayService : Service() {
                 withContext(Dispatchers.Main) {
                     // Idle before the notice: a recall is instant, so a spinning button would read as a stall.
                     setTranslating(false)
-                    val notices = listOfNotNull("Already translated", page.translationResult.untranslatedNotice())
+                    val notices = listOfNotNull(
+                        getString(R.string.service_already_translated),
+                        page.translationResult.untranslatedNotice()?.toUiText()?.resolve(this@OverlayService)
+                    )
                     showFinishedPage(page, notices.joinToString(" · "))
                 }
                 return@launch
@@ -514,13 +526,13 @@ class OverlayService : Service() {
                 /** Logs a pipeline error and posts its message while the translation job is active. */
                 override fun onError(stage: TranslationPipeline.Stage, message: String) {
                     Log.e(TAG, "Pipeline error stage=$stage message=$message")
-                    updateStatus(job, "Failed: $message")
+                    updateStatus(job, getString(R.string.service_failed, message))
                 }
 
                 /** Logs the completed page’s bubble count and timing, then posts the drawing status. */
                 override fun onComplete(result: PipelineResult) {
                     Log.i(TAG, "Pipeline complete bubbles=${result.typesetBubbles.size} timeMs=${result.totalTimeMs}")
-                    updateStatus(job, "Drawing translation")
+                    updateStatus(job, getString(R.string.overlay_stage_done))
                 }
             }
 
@@ -553,7 +565,8 @@ class OverlayService : Service() {
                 ignoredRegions = ignored.map { RectF(it.left, it.top, it.right, it.bottom) },
                 targetLanguage = settings.targetLanguage,
                 glossary = settings.glossary,
-                sourceLanguage = readingSelection.source()
+                sourceLanguage = readingSelection.source(),
+                spokenLanguage = settings.spoken
             )
             if (result != null) lastPage = PageRecord(bitmap, result, settings, recalled = false)
             val failure = result?.translationResult?.readerFailure()
@@ -569,13 +582,13 @@ class OverlayService : Service() {
             }
             withContext(Dispatchers.Main) {
                 if (result != null && failure == null) {
-                    showFinishedPage(result, result.translationResult.untranslatedNotice())
+                    showFinishedPage(result, result.translationResult.untranslatedNotice()?.toUiText()?.resolve(this@OverlayService))
                 } else {
                     // The OCR pass may already have drawn its bubbles, and that overlay is
                     // untouchable — without this the reader is left with pinned Japanese (#308).
                     translationRenderOverlay.remove()
                     // A null result already put the pipeline's own "Failed: …" on the status line.
-                    failure?.let { statusOverlay.showOrUpdate("Failed: $it") }
+                    failure?.let { statusOverlay.showOrUpdate(getString(R.string.service_failed, it.toUiText().resolve(this@OverlayService))) }
                     delay(1500)
                     statusOverlay.remove()
                 }
@@ -643,6 +656,7 @@ class OverlayService : Service() {
         detectionThreshold = translationPipeline.confidenceThreshold,
         fontScale = translationPipeline.fontSizeScale,
         targetLanguage = TargetLanguageStore(sharedPreferences).load(),
+        spoken = SpokenLanguageStore(sharedPreferences).effective(readingSelection.source()),
         glossary = NameGlossaryStore(sharedPreferences).load()
     )
 
@@ -662,9 +676,10 @@ class OverlayService : Service() {
         )
     }
 
-    private suspend fun failTranslation(job: Job, reason: String) {
-        Log.e(TAG, reason)
-        updateStatus(job, "Failed: $reason")
+    private suspend fun failTranslation(job: Job, @StringRes reason: Int) {
+        val text = getString(reason)
+        Log.e(TAG, text)
+        updateStatus(job, getString(R.string.service_failed, text))
         withContext(Dispatchers.Main) {
             delay(1500)
             statusOverlay.remove()

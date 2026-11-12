@@ -5,6 +5,7 @@ import com.yomu.core.GenerationParams
 import com.yomu.core.ModelProfile
 import com.yomu.core.RuntimeLimits
 import com.yomu.core.SourceLanguage
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.core.TranslatableBubble
 import com.yomu.core.TranslatablePage
@@ -205,6 +206,18 @@ class LlamaTranslationBridgeTest {
         val grammar = native.grammars.single()
         assertTrue(grammar, grammar.startsWith("root ::= \"[1] \" line \"\\n\" \"[2] \" line \"\\n\"?\n"))
         assertTrue(grammar, grammar.contains("line ::= [^\\r\\n\\[]{1,160}"))
+        model.delete()
+    }
+
+    @Test
+    fun translatePage_batchLineBoundGrowsWithALongSourceLine() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val native = FakeLlamaBridge { GenerationResult.Success("[1] Hello", 1L) }
+        val slot = LlamaTranslationBridge(native, profile(model, idKeyedBatch = true, multilingual = true))
+
+        slot.translatePage(page(1 to "a".repeat(225), 2 to "short", language = TargetLanguage.RUSSIAN))
+
+        assertTrue(native.grammars.single(), native.grammars.single().contains("line ::= [^\\r\\n\\[]{1,450}"))
         model.delete()
     }
 
@@ -642,6 +655,38 @@ class LlamaTranslationBridgeTest {
         idKeyedBatch: Boolean = false,
         multilingual: Boolean = false
     ): ModelProfile = ModelProfile(model.absolutePath, idKeyedBatch, promptMode, multilingual = multilingual)
+
+    private fun spokenPage(spoken: SpokenLanguage?, language: TargetLanguage = TargetLanguage.GERMAN) = TranslatablePage(
+        listOf(listOf(TranslatableBubble(1, "Bonjour"))), language, SourceLanguage.LATIN_SCRIPT, spoken
+    )
+
+    @Test
+    fun translatePage_aNamedSourceIsWrittenIntoEveryPromptShape() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val batch = FakeLlamaBridge { GenerationResult.Success("[1] Hallo\n", 1L) }
+        LlamaTranslationBridge(batch, profile(model, idKeyedBatch = true, multilingual = true)).translatePage(spokenPage(SpokenLanguage.FRENCH))
+        assertTrue(batch.prompts.single().startsWith("Translate each French line to German."))
+
+        val gemma = FakeLlamaBridge { GenerationResult.Success("Hallo", 1L) }
+        LlamaTranslationBridge(gemma, profile(model, TranslationPromptMode.TRANSLATEGEMMA, multilingual = true))
+            .translatePage(spokenPage(SpokenLanguage.FRENCH))
+        assertTrue(gemma.prompts.single().startsWith("You are a professional French (fr) to German (de) translator."))
+        model.delete()
+    }
+
+    @Test
+    fun translatePage_autoNamesOnlyTheTarget() = runTest {
+        val model = File.createTempFile("model", ".gguf")
+        val batch = FakeLlamaBridge { GenerationResult.Success("[1] Hello\n", 1L) }
+        LlamaTranslationBridge(batch, profile(model, idKeyedBatch = true))
+            .translatePage(spokenPage(null, TargetLanguage.ENGLISH).copy(sourceLanguage = SourceLanguage.JAPANESE))
+        assertTrue(batch.prompts.single().startsWith("Translate each line to English."))
+
+        val card = FakeLlamaBridge { GenerationResult.Success("Hello", 1L) }
+        LlamaTranslationBridge(card, profile(model, TranslationPromptMode.MODEL_CARD)).translatePage(spokenPage(null, TargetLanguage.ENGLISH))
+        assertEquals("Translate the following text into English.\n\nBonjour", card.prompts.single())
+        model.delete()
+    }
 
     private fun page(
         vararg bubbles: Pair<Int, String>,

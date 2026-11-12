@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yomu.app.R
 import com.yomu.app.detection.DetectionThresholdStore
 import com.yomu.app.db.entities.ModelEntity
 import com.yomu.app.db.entities.ModelStatus
@@ -16,6 +17,7 @@ import com.yomu.app.service.SlotDeliverable
 import com.yomu.app.translation.FitBudget
 import com.yomu.app.translation.ResourceLimit
 import com.yomu.app.translation.TranslationModelSelection
+import com.yomu.app.ui.UiText
 import com.yomu.core.Constants
 import com.yomu.core.GenerationBound
 import com.yomu.core.GenerationParams
@@ -62,8 +64,8 @@ data class SettingsUiState(
     val limitRefusal: LimitRefusal? = null,
     /** What the app is using right now; null until the Performance screen first samples it. */
     val resources: ResourceReadout? = null,
-    /** One message naming every stored value that was recovered to its default, or null. */
-    val recoveryWarning: String? = null
+    /** Names of every stored value that was recovered to its default, or null. */
+    val recoveryWarning: List<UiText>? = null
 ) {
     val generationOverridden: Boolean
         get() = GenerationBound.entries.any { it.read(generation) != it.read(generationDefaults) }
@@ -73,9 +75,9 @@ data class SettingsUiState(
     fun needsSlowWarning(deliverable: SlotDeliverable): Boolean =
         ModelSlotSelection.needsSlowWarning(deliverable, fitBudget())
 
-    fun languageBlock(deliverable: SlotDeliverable): String? = ModelSlotSelection.languageBlock(deliverable, targetLanguage)
+    fun languageBlock(deliverable: SlotDeliverable): UiText? = ModelSlotSelection.languageBlock(deliverable, targetLanguage)
 
-    fun languageUnavailable(language: TargetLanguage): String? =
+    fun languageUnavailable(language: TargetLanguage): UiText? =
         ModelSlotSelection.languageUnavailable(language, deliverables[ModelType.LLM].orEmpty(), ::fits)
 
     private fun fitBudget() = FitBudget(
@@ -86,7 +88,7 @@ data class SettingsUiState(
 }
 
 /** Identity equality on purpose: refusing the same change twice must still snap the slider back. */
-class LimitRefusal(val message: String)
+class LimitRefusal(val message: UiText)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -227,7 +229,7 @@ class SettingsViewModel @Inject constructor(
             _uiState.update { state ->
                 state.copy(
                     resourceLimits = storedResourceLimits(),
-                    limitRefusal = blocker?.let { LimitRefusal("${it.name} needs more memory than that allows. Pick a smaller model first.") }
+                    limitRefusal = blocker?.let { LimitRefusal(UiText(R.string.settings_limit_refusal, it.name)) }
                 )
             }
         }
@@ -245,13 +247,12 @@ class SettingsViewModel @Inject constructor(
 
     private fun SettingsUiState.withGenerationProfile(): SettingsUiState {
         val loaded = modelSelection.generationProfile()
-        val recovered = loaded.recovered.map { it.label } +
-            if (modelSelection.storedLlmModelRecovered()) listOf("Model") else emptyList()
+        val recovered = loaded.recovered.map { UiText(it.labelRes) } +
+            if (modelSelection.storedLlmModelRecovered()) listOf(UiText(R.string.settings_recovered_model)) else emptyList()
         return copy(
             generation = loaded.params,
             generationDefaults = modelSelection.generationDefaults(),
             recoveryWarning = recovered.takeIf { it.isNotEmpty() }
-                ?.let { "Some saved settings were invalid and are using their defaults: ${it.joinToString()}." }
         )
     }
 

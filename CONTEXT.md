@@ -71,7 +71,7 @@ One page's evidence for a bug report: its capture, each bubble's OCR text, the m
 _Avoid_: bug bundle, diagnostics dump, crash report
 
 **Source language**:
-The language a page is read in, fixed by the curated OCR model in the OCR slot: manga-ocr reads Japanese, and a PP-OCRv5 recognizer reads Chinese and English, Korean, Latin-script or Cyrillic-script text. A script family is never named in the prompt; the model reads the source as written.
+What the reader says a page is written in, chosen on Home: Auto, or one of the languages in `SpokenLanguage`. Auto names no source in the prompt, only the [[target language]]; a language is named there and picks the OCR model that reads its script. The curated OCR model in the OCR slot still fixes the script a page is read in: manga-ocr reads Japanese, and a PP-OCRv5 recognizer reads Chinese and English, Korean, Latin-script or Cyrillic-script text. A choice whose script the OCR model does not read (the model was changed in Settings) counts as Auto.
 _Avoid_: input language, original language
 
 **Target language**:

@@ -2,6 +2,7 @@ package com.yomu.app.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.yomu.app.AppLanguage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +19,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("yomu_prefs", Context.MODE_PRIVATE)
+        return context.getSharedPreferences(AppLanguage.PREFS_NAME, Context.MODE_PRIVATE)
     }
 
     @Provides

@@ -1,22 +1,24 @@
 package com.yomu.app.ui.home
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yomu.app.R
 import com.yomu.app.db.HistoryDao
 import com.yomu.app.db.entities.ModelStatus
 import com.yomu.app.db.entities.ModelType
 import com.yomu.app.service.LanguageSwitch
 import com.yomu.app.service.ModelManager
 import com.yomu.app.service.ModelSlotSelection
+import com.yomu.app.service.SourceLanguageSelection
+import com.yomu.app.ui.UiText
 import com.yomu.app.service.OverlayService
 import com.yomu.app.service.TriggerModeStore
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,15 +39,17 @@ class HomeViewModel @Inject constructor(
     private val sharedPreferences: SharedPreferences,
     private val modelManager: ModelManager,
     private val historyDao: HistoryDao,
-    private val slotSelection: ModelSlotSelection
+    private val slotSelection: ModelSlotSelection,
+    private val sourceLanguage: SourceLanguageSelection
 ) : ViewModel() {
+
     private companion object {
         const val SETUP_COMPLETE = "reading_setup_complete"
         const val HAS_READ = "has_read"
         val DOWNLOAD_LABELS = mapOf(
-            ModelType.DETECTION to "Finding speech bubbles",
-            ModelType.OCR to "Reading text",
-            ModelType.LLM to "Translating into English"
+            ModelType.DETECTION to UiText(R.string.home_download_detection),
+            ModelType.OCR to UiText(R.string.home_download_ocr),
+            ModelType.LLM to UiText(R.string.home_download_translation)
         )
     }
 
@@ -53,26 +57,14 @@ class HomeViewModel @Inject constructor(
         setupComplete = sharedPreferences.getBoolean(SETUP_COMPLETE, false),
         hasRead = sharedPreferences.getBoolean(HAS_READ, false),
         deliverables = ModelType.entries.associateWith(slotSelection::deliverables),
-        fitBudget = slotSelection.fitBudget(modelManager.deviceTotalMemBytes())
+                fitBudget = slotSelection.fitBudget(modelManager.deviceTotalMemBytes())
     ).withSlots())
     val uiState = _uiState.asStateFlow()
     private var historyJob: Job? = null
     private var countJob: Job? = null
     private var setupJob: Job? = null
 
-    private val serviceStateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.action) {
-                OverlayService.ACTION_SERVICE_STARTED -> _uiState.update {
-                    it.copy(isServiceRunning = true, serviceError = false, confirmation = "Reading is on")
-                }
-                OverlayService.ACTION_SERVICE_STOPPED -> _uiState.update { it.copy(isServiceRunning = false) }
-                OverlayService.ACTION_SERVICE_START_FAILED -> _uiState.update {
-                    it.copy(isServiceRunning = false, serviceError = true)
-                }
-            }
-        }
-    }
+    private val serviceStateReceiver = ServiceStateReceiver(_uiState::update)
 
     init {
         ContextCompat.registerReceiver(context, serviceStateReceiver, IntentFilter().apply {
@@ -171,6 +163,13 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun chooseSpokenLanguage(language: SpokenLanguage?) {
+        _uiState.update { it.copy(spoken = language) }
+        viewModelScope.launch {
+            sourceLanguage.choose(language, _uiState.value.fitBudget.totalMemBytes)?.let { downloadIfPending(it, ModelType.OCR) }
+        }
+    }
+
     fun acceptLanguageOffer() {
         val offer = _uiState.value.languageOffer ?: return
         _uiState.update { it.copy(languageOffer = null) }
@@ -181,9 +180,9 @@ class HomeViewModel @Inject constructor(
 
     fun declineLanguageOffer() = _uiState.update { it.copy(languageOffer = null) }
 
-    private suspend fun downloadIfPending(id: String) {
+    private suspend fun downloadIfPending(id: String, type: ModelType = ModelType.LLM) {
         _uiState.update { it.withSlots() }
-        if (slotSelection.pendingId(ModelType.LLM) != id) return
+        if (slotSelection.pendingId(type) != id) return
         slotSelection.download(id)
         _uiState.update { it.withSlots() }
     }
@@ -201,6 +200,7 @@ class HomeViewModel @Inject constructor(
         translationPendingId = slotSelection.pendingId(ModelType.LLM),
         // With the slots, since a download that never completes can return the language to English.
         targetLanguage = slotSelection.targetLanguage(),
+        spoken = sourceLanguage.current(),
         setupDownloadBytes = slotSelection.downloadBytes(models.associate { it.id to it.status })
     )
 
@@ -272,7 +272,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 historyDao.clearHistory()
-                _uiState.update { it.copy(confirmation = "Recent translations cleared", clearError = false) }
+                _uiState.update { it.copy(confirmation = UiText(R.string.home_recent_cleared), clearError = false) }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {

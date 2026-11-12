@@ -1,5 +1,6 @@
 package com.yomu.app.service
 
+import com.yomu.app.R
 import com.yomu.app.db.entities.ModelStatus
 import com.yomu.app.db.entities.ModelType
 import com.yomu.app.translation.DeliverableSpeed
@@ -8,6 +9,8 @@ import com.yomu.app.translation.LlmModelCatalog
 import com.yomu.app.translation.ResourceLimit
 import com.yomu.app.translation.TargetLanguageStore
 import com.yomu.app.translation.TranslationModelSelection
+import com.yomu.app.ui.UiText
+import com.yomu.app.ui.labelRes
 import com.yomu.core.Constants
 import com.yomu.core.TargetLanguage
 import com.yomu.pipeline.TranslationPipeline
@@ -31,7 +34,7 @@ data class SlotDeliverable(
     /** Null for the reading models, which write no language. */
     val multilingual: Boolean? = null
 ) {
-    val languageLabel: String? get() = multilingual?.let { if (it) "Multilingual" else "English only" }
+    val languageLabelRes: Int? get() = multilingual?.let { if (it) R.string.settings_multilingual else R.string.settings_english_only }
 
     /** Read off the download size unless the entry states its own, so a reader is told the same thing on every device. */
     val speed: DeliverableSpeed
@@ -192,7 +195,7 @@ class ModelSlotSelection @Inject constructor(
     }
 
     /** Why [language] can't be chosen on this device, or null. */
-    fun languageUnavailable(language: TargetLanguage, totalMemBytes: Long): String? {
+    fun languageUnavailable(language: TargetLanguage, totalMemBytes: Long): UiText? {
         val budget = fitBudget(totalMemBytes)
         return languageUnavailable(language, deliverables(ModelType.LLM)) { fits(it.id, budget) }
     }
@@ -274,14 +277,14 @@ class ModelSlotSelection @Inject constructor(
         // ADR-0017: chosen on desk research and a desktop run, not yet checked on a phone.
         private val EXPERIMENTAL_READING = setOf(Constants.COMIC_TEXT_DETECTOR_MODEL_ID)
 
-        const val NO_MULTILINGUAL_FIT = "No Multilingual model fits this device"
+        val NO_MULTILINGUAL_FIT = UiText(R.string.settings_no_multilingual_fit)
 
         /** Why [deliverable] can't translate into [language], or null when it can. Reading models write no language. */
-        fun languageBlock(deliverable: SlotDeliverable, language: TargetLanguage): String? =
-            "Can't write ${language.promptName}".takeIf { language != TargetLanguage.ENGLISH && deliverable.multilingual == false }
+        fun languageBlock(deliverable: SlotDeliverable, language: TargetLanguage): UiText? =
+            UiText(R.string.language_block, UiText(language.labelRes())).takeIf { language != TargetLanguage.ENGLISH && deliverable.multilingual == false }
 
         /** Why [language] can't be chosen, or null: any language but English needs a Multilingual model that [fits]. */
-        fun languageUnavailable(language: TargetLanguage, deliverables: List<SlotDeliverable>, fits: (SlotDeliverable) -> Boolean): String? =
+        fun languageUnavailable(language: TargetLanguage, deliverables: List<SlotDeliverable>, fits: (SlotDeliverable) -> Boolean): UiText? =
             NO_MULTILINGUAL_FIT.takeIf { language != TargetLanguage.ENGLISH && deliverables.none { it.multilingual == true && fits(it) } }
 
         /** A Slow deliverable asks before gigabytes are downloaded; one that doesn't fit can't be picked at all. */

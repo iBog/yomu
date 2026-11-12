@@ -29,6 +29,7 @@ class PageRecallTest {
         detectionThreshold = 0.25f,
         fontScale = 1.0f,
         targetLanguage = TargetLanguage.ENGLISH,
+        spoken = null,
         glossary = emptyList()
     )
 

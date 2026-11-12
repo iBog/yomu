@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_title">Set up reading</string>
+    <string name="setup_tagline">Your manga, in English</string>
+    <string name="setup_intro">Yomu finds the speech bubbles, reads the Japanese and translates it on your device. Your pages stay with you.</string>
+    <string name="setup_apps_title">Read in the apps you love</string>
+    <string name="setup_apps_body">Turn reading on and leave it on while you browse. Tap Yomu’s floating button whenever you want to translate a page.</string>
+    <string name="setup_models_body">First, download the models that read and translate the page. The defaults suit most devices; tap a model to pick another.</string>
+    <string name="setup_detection_title">Detection</string>
+    <string name="setup_detection_description">Finds the speech bubbles on the page.</string>
+    <string name="setup_ocr_title">OCR</string>
+    <string name="setup_ocr_description">Reads the text inside each bubble. Pick the model for the language your comic is written in.</string>
+    <string name="setup_translation_title">Translation</string>
+    <string name="setup_translation_description">The on-device model that translates each bubble.</string>
+    <string name="setup_blocked">%1$s needs more memory than this phone\'s fit budget allows. Pick a smaller model, then try again.</string>
+    <string name="setup_error">Setup couldn\'t finish. Check your connection and available storage, then try again. Completed downloads are kept.</string>
+    <string name="setup_download_size">Download size: %1$s</string>
+    <string name="setup_all_downloaded">Every chosen model is already downloaded.</string>
+    <string name="setup_metered">You\'re on mobile data. This %1$s download will count toward your data plan.</string>
+    <string name="setup_download">Download</string>
+    <string name="setup_preparing">Preparing reading…</string>
+    <string name="setup_keep_open">Keep Yomu open while the download finishes.</string>
+    <string name="setup_permission_title">Allow reading over other apps</string>
+    <string name="setup_permission_body">Yomu needs permission to show its floating button and English text over your manga. Enable ‘Allow display over other apps’, then come back here.</string>
+    <string name="setup_open_permission">Open permission settings</string>
+    <string name="setup_ready_description">Ready</string>
+    <string name="setup_ready_title">You\'re ready to read</string>
+    <string name="setup_ready_body">When you turn reading on, Android will ask to share your screen with Yomu for that reading session.</string>
+    <string name="setup_go_home">Go to Home</string>
+    <string name="setup_back_home">Back to Home</string>
+</resources>

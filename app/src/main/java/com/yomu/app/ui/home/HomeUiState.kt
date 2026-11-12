@@ -1,5 +1,6 @@
 package com.yomu.app.ui.home
 
+import com.yomu.app.R
 import com.yomu.app.db.entities.ModelEntity
 import com.yomu.app.db.entities.ModelType
 import com.yomu.app.db.entities.TranslationEntity
@@ -10,7 +11,10 @@ import com.yomu.app.service.TriggerMode
 import com.yomu.app.service.TriggerModeStore
 import com.yomu.app.translation.FitBudget
 import com.yomu.app.translation.LlmModelCatalog
+import com.yomu.app.ui.UiText
+import com.yomu.app.ui.labelRes
 import com.yomu.core.RuntimeLimits
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 
 data class HomeUiState(
@@ -24,7 +28,7 @@ data class HomeUiState(
     val setupVisible: Boolean = false,
     val setupStarted: Boolean = false,
     val setupDownloadsReady: Boolean = false,
-    val downloading: String? = null,
+    val downloading: UiText? = null,
     val downloadProgress: Int = 0,
     val setupError: Boolean = false,
     /** Name of the chosen model setup refused to download because it is outside the fit budget, or null. */
@@ -34,6 +38,8 @@ data class HomeUiState(
     val translationSelectedId: String? = null,
     val translationPendingId: String? = null,
     val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH,
+    /** The source language the reader named (#444); null is Auto. */
+    val spoken: SpokenLanguage? = null,
     /** The model switch a language choice is waiting on the reader to accept or decline (#338), or null. */
     val languageOffer: LanguageSwitch.Offer? = null,
     val setupDownloadBytes: Long = 0L,
@@ -46,7 +52,7 @@ data class HomeUiState(
     val historyError: Boolean = false,
     val clearError: Boolean = false,
     val serviceError: Boolean = false,
-    val confirmation: String? = null
+    val confirmation: UiText? = null
 ) {
     val readingStatus: ReadingStatus
         get() = resolveReadingStatus(readiness == Readiness.Ready && setupComplete, isServiceRunning)
@@ -56,16 +62,20 @@ data class HomeUiState(
     fun needsSlowWarning(deliverable: SlotDeliverable): Boolean =
         ModelSlotSelection.needsSlowWarning(deliverable, fitBudget)
 
-    fun languageBlock(deliverable: SlotDeliverable): String? = ModelSlotSelection.languageBlock(deliverable, targetLanguage)
+    fun languageBlock(deliverable: SlotDeliverable): UiText? = ModelSlotSelection.languageBlock(deliverable, targetLanguage)
 
-    fun languageUnavailable(language: TargetLanguage): String? =
+    fun languageUnavailable(language: TargetLanguage): UiText? =
         ModelSlotSelection.languageUnavailable(language, deliverables[ModelType.LLM].orEmpty(), ::fits)
 
-    fun languageChipLabel(): String = "Japanese → ${targetLanguage.promptName}"
+    fun spokenChipLabel(): UiText = UiText(R.string.home_chip_from, UiText(spoken?.labelRes() ?: R.string.language_auto))
 
-    fun translationChipLabel(): String {
+    fun languageChipLabel(): UiText = UiText(R.string.home_chip_to, UiText(targetLanguage.labelRes()))
+
+    fun translationChipLabel(): UiText {
         val options = deliverables[ModelType.LLM].orEmpty()
-        val selected = options.firstOrNull { it.id == translationSelectedId }?.name ?: "No model selected"
-        return options.firstOrNull { it.id == translationPendingId }?.let { "$selected · ${it.name} when downloaded" } ?: selected
+        val selected = options.firstOrNull { it.id == translationSelectedId }?.name
+            ?.let { UiText(R.string.home_verbatim, it) } ?: UiText(R.string.home_chip_no_model)
+        return options.firstOrNull { it.id == translationPendingId }
+            ?.let { UiText(R.string.home_chip_pending, selected, it.name) } ?: selected
     }
 }

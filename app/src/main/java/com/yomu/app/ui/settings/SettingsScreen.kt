@@ -1,5 +1,6 @@
 package com.yomu.app.ui.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,30 +13,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.yomu.app.R
 import com.yomu.app.ui.theme.*
 
-enum class SettingsSection(val route: String, val title: String, val description: String) {
-    Translation("settings/translation", "Translation", "How Yomu translates the Japanese into your language, on your device."),
-    NameGlossary("settings/name-glossary", "Name glossary", "Names Yomu always translates the same way."),
-    Pipeline("settings/pipeline", "Pipeline", "The models that find the speech bubbles and read the Japanese."),
-    Typesetting("settings/typesetting", "Typesetting", "How translated text is set inside the bubbles."),
-    Performance("settings/performance", "Performance", "What translation costs this phone, and how much the model may use."),
-    Appearance("settings/appearance", "Appearance", "How Yomu looks and where you start a translation.")
+enum class SettingsSection(val route: String, @StringRes val title: Int, @StringRes val description: Int) {
+    Translation("settings/translation", R.string.settings_section_translation, R.string.settings_section_translation_description),
+    NameGlossary("settings/name-glossary", R.string.settings_section_name_glossary, R.string.settings_section_name_glossary_description),
+    Pipeline("settings/pipeline", R.string.settings_section_pipeline, R.string.settings_section_pipeline_description),
+    Typesetting("settings/typesetting", R.string.settings_section_typesetting, R.string.settings_section_typesetting_description),
+    Performance("settings/performance", R.string.settings_section_performance, R.string.settings_section_performance_description),
+    Appearance("settings/appearance", R.string.settings_section_appearance, R.string.settings_section_appearance_description)
 }
 
 @Composable
 fun SettingsScreen(onOpen: (SettingsSection) -> Unit) {
     val context = LocalContext.current
     val version = remember { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
-    SettingsPage("Settings") {
+    SettingsPage(stringResource(R.string.settings_screen_title)) {
         PaperSurface(Modifier.fillMaxWidth()) {
             Column {
                 SettingsSection.entries.forEach { section ->
-                    SettingsEntry(section.title, section.description, onClick = { onOpen(section) })
+                    SettingsEntry(stringResource(section.title), stringResource(section.description), onClick = { onOpen(section) })
                 }
-                SettingsEntry("Providers", "Coming soon", enabled = false)
-                SettingsEntry("About", "Yomu v$version")
+                SettingsEntry(stringResource(R.string.settings_providers), stringResource(R.string.settings_providers_coming_soon), enabled = false)
+                SettingsEntry(stringResource(R.string.settings_about), stringResource(R.string.settings_about_version, version))
             }
         }
     }
@@ -63,7 +66,7 @@ internal fun SettingsPage(title: String, description: String? = null, onBack: ((
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            onBack?.let { IconButton(onClick = it) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") } }
+            onBack?.let { IconButton(onClick = it) { Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.settings_back)) } }
             Text(title, style = MaterialTheme.typography.headlineLarge)
         }
         description?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }

@@ -34,6 +34,18 @@ class TranslationEngineTest {
     }
 
     @Test
+    fun translateLines_sendsEveryNonBlankLineAsOneBubbleOfOnePage() = runTest {
+        val slot = FakeTranslationSlot(PageTranslation(mapOf(0 to "Hello", 1 to "Bye"), "", 1L))
+
+        val result = TranslationEngine { slot }
+            .translateLines(listOf(" こんにちは ", "", "さようなら"), TargetLanguage.SPANISH, null, emptyList())
+
+        assertEquals(listOf(listOf(0 to "こんにちは", 1 to "さようなら")), slot.pagePairs())
+        assertNull(slot.pages.single().spoken)
+        assertEquals(listOf("Hello", "Bye"), result.translations.map { it.translatedText })
+    }
+
+    @Test
     fun translate_glossaryRenderingReachesTheSourceTextButNotTheOcrText() = runTest {
         val slot = FakeTranslationSlot(PageTranslation(mapOf(1 to "Luffy is here"), "", 1L))
 
@@ -105,7 +117,7 @@ class TranslationEngineTest {
             .translate(listOf(block(1 to "こんにちは", 2 to "さようなら", 3 to "またね")))
 
         assertEquals(listOf(true, false, false), result.translations.map { it.answered })
-        assertEquals("2 of 3 bubbles not translated", result.untranslatedNotice())
+        assertEquals(UntranslatedNotice(2, 3), result.untranslatedNotice())
     }
 
     /** Verifies a fully answered page produces no untranslated-bubble notice. */
@@ -380,7 +392,7 @@ class TranslationEngineTest {
 
         assertEquals(TranslationOutcome.NOT_LOADED, result.outcome)
         assertEquals("model_missing", result.errorCode)
-        assertEquals("Translation model is missing \u2014 download it again in Settings", result.readerFailure())
+        assertEquals(ReaderFailure.ModelMissing, result.readerFailure())
         // The bubble still carries its source text, which is exactly why the reader needs telling.
         assertEquals("\u3053\u3093\u306b\u3061\u306f", result.translations.single().translatedText)
     }
@@ -420,7 +432,7 @@ class TranslationEngineTest {
 
         val result = TranslationEngine { slot }.translate(listOf(block(1 to "\u3053\u3093\u306b\u3061\u306f")), TargetLanguage.GERMAN)
 
-        assertEquals("This model is English only \u2014 pick a Multilingual model or English in Settings", result.readerFailure())
+        assertEquals(ReaderFailure.EnglishOnly, result.readerFailure())
     }
 
     /** Builds a panel with synthetic bounds, OCR text keyed by bubble ID, and the requested reading order. */

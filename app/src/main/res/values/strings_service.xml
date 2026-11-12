@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="service_failed">Failed: %1$s</string>
+    <string name="service_already_translated">Already translated</string>
+    <string name="service_capturing_screen">Capturing screen</string>
+    <string name="service_error_download_model">Download a model in Settings</string>
+    <string name="service_error_no_projection">No active MediaProjection</string>
+    <string name="service_error_no_frame">Capture returned no frame</string>
+    <string name="service_report_failed">Could not write the page report</string>
+    <string name="service_report_chooser_title">Report last page</string>
+    <string name="service_no_model_selected">No model selected</string>
+</resources>

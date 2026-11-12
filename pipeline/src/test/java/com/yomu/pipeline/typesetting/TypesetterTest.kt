@@ -34,6 +34,30 @@ class TypesetterTest {
     }
 
     @Test
+    fun `a large box gets text larger than the small-bubble cap instead of a sea of padding`() {
+        val text = "You catch your reflection in a shop window and don't recognise the walk: hips rolling, steps falling on a single line"
+        val b = typesetter.typeset(listOf(bubble(1, text)), mapOf(1 to bounds(740f, 530f))).first()
+
+        assertTrue("font ${b.fontSize}", b.fontSize > 36f)
+        val textHeight = b.lineHeight * b.textLines.size
+        assertTrue("text is ${textHeight}px in a 530px box", textHeight <= 530f)
+    }
+
+    @Test
+    fun `a text panel keeps a thin margin and a bubble the wide one`() {
+        assertEquals(0.04f, typesetter.paddingFor(bounds(740f, 530f)), 0.0001f)
+        assertEquals(0.1f, typesetter.paddingFor(bounds(200f, 150f)), 0.0001f)
+        assertEquals(0.1f, typesetter.paddingFor(bounds(900f, 200f)), 0.0001f)
+    }
+
+    @Test
+    fun `a small bubble keeps the font cap`() {
+        val b = typesetter.typeset(listOf(bubble(1, "Yes!")), mapOf(1 to bounds(200f, 150f))).first()
+
+        assertTrue("font ${b.fontSize}", b.fontSize <= 36f)
+    }
+
+    @Test
     fun `no line exceeds bubble width`() {
         val result = typesetter.typeset(
             listOf(bubble(1, "Hello world this is a longer translation test")),

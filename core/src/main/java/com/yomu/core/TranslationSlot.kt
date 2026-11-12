@@ -14,7 +14,9 @@ data class TranslatableBubble(val bubbleId: Int, val sourceText: String)
 data class TranslatablePage(
     val panels: List<List<TranslatableBubble>>,
     val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH,
-    val sourceLanguage: SourceLanguage = SourceLanguage.JAPANESE
+    val sourceLanguage: SourceLanguage = SourceLanguage.JAPANESE,
+    /** The source the prompt names; null (Auto) names none. Defaults to the language its script alone fixes. */
+    val spoken: SpokenLanguage? = SpokenLanguage.ofScript(sourceLanguage)
 )
 
 /**

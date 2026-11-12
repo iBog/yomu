@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_text_floating_button">Нажмите плавающую кнопку, чтобы перевести мангу</string>
+    <string name="notification_text_translating">Идёт перевод страницы. Нажмите, чтобы отменить</string>
+    <string name="notification_text_tap_to_translate">Нажмите, чтобы перевести страницу на экране</string>
+    <string name="notification_action_translate">Перевести</string>
+    <string name="notification_action_cancel">Отмена</string>
+    <string name="notification_action_stop">Остановить</string>
+</resources>

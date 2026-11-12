@@ -10,6 +10,7 @@ import android.graphics.Typeface
 import android.view.View
 import android.view.animation.LinearInterpolator
 import kotlin.math.sin
+import com.yomu.app.R
 import com.yomu.app.ui.theme.paperColors
 
 class FloatingButtonView(context: Context) : View(context) {
@@ -44,7 +45,9 @@ class FloatingButtonView(context: Context) : View(context) {
     }
 
     fun updateAppearance() {
-        contentDescription = if (currentState == State.IDLE) "Translate screen. Hold for quick settings." else "Stop translating"
+        contentDescription = context.getString(
+            if (currentState == State.IDLE) R.string.overlay_button_translate_description else R.string.overlay_button_stop_description
+        )
         if (currentState == State.TRANSLATING && isAttachedToWindow && ValueAnimator.areAnimatorsEnabled()) {
             if (animator == null) {
                 animator = ValueAnimator.ofFloat(0f, 1f).apply {

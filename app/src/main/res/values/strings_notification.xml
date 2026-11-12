@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_text_floating_button">Tap the floating button to translate manga</string>
+    <string name="notification_text_translating">Translating the page. Tap to cancel</string>
+    <string name="notification_text_tap_to_translate">Tap to translate the page on screen</string>
+    <string name="notification_action_translate">Translate</string>
+    <string name="notification_action_cancel">Cancel</string>
+    <string name="notification_action_stop">Stop</string>
+</resources>

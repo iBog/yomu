@@ -13,12 +13,17 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import com.yomu.app.R
 import com.yomu.app.service.TriggerMode
+import com.yomu.app.ui.asString
+import com.yomu.app.ui.labelRes
 import com.yomu.app.ui.theme.*
 import com.yomu.core.TargetLanguage
 import kotlinx.coroutines.launch
@@ -39,10 +44,10 @@ fun HomeScreen(
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text("Clear recent translations?") },
-            text = { Text("This removes your saved translations from this device.") },
-            confirmButton = { TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = { confirmClear = false; viewModel.clearHistory() }) { Text("Clear") } },
-            dismissButton = { TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = { confirmClear = false }) { Text("Keep") } }
+            title = { Text(stringResource(R.string.home_clear_title)) },
+            text = { Text(stringResource(R.string.home_clear_message)) },
+            confirmButton = { TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = { confirmClear = false; viewModel.clearHistory() }) { Text(stringResource(R.string.home_clear)) } },
+            dismissButton = { TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = { confirmClear = false }) { Text(stringResource(R.string.home_keep)) } }
         )
     }
     LazyColumn(
@@ -52,12 +57,12 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Text("Home", style = MaterialTheme.typography.headlineLarge)
+            Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(16.dp))
             val label = when (readingStatus) {
-                ReadingStatus.On -> "Reading is ON"
-                ReadingStatus.Off -> "Reading is OFF"
-                ReadingStatus.NotReady -> "Finish setup to read"
+                ReadingStatus.On -> stringResource(R.string.home_reading_on)
+                ReadingStatus.Off -> stringResource(R.string.home_reading_off)
+                ReadingStatus.NotReady -> stringResource(R.string.home_finish_setup_to_read)
             }
             val icon = when (readingStatus) {
                 ReadingStatus.On -> Icons.Default.Check
@@ -76,64 +81,67 @@ fun HomeScreen(
                     Icon(icon, contentDescription = null)
                     Column(Modifier.weight(1f)) {
                         Text(label, style = MaterialTheme.typography.headlineSmall)
-                        Text(when (readingStatus) {
-                            ReadingStatus.On -> "Tap to turn off"
-                            ReadingStatus.Off -> "Tap to turn on"
-                            ReadingStatus.NotReady -> "Yomu needs a few things first"
-                        }, style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(when (readingStatus) {
+                            ReadingStatus.On -> R.string.home_tap_to_turn_off
+                            ReadingStatus.Off -> R.string.home_tap_to_turn_on
+                            ReadingStatus.NotReady -> R.string.home_needs_things_first
+                        }), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
             Spacer(Modifier.height(12.dp))
             Text(
-                if (readingStatus == ReadingStatus.On) when (state.triggerMode) {
-                    TriggerMode.FLOATING_BUTTON -> "Keep reading in your manga app. Tap the floating button to translate a page."
-                    TriggerMode.NOTIFICATION -> "Keep reading in your manga app. Pull down the shade and tap Yomu's notification to translate a page."
-                }
-                else "Turn reading on, then browse manga in the app you already use.",
+                stringResource(
+                    if (readingStatus == ReadingStatus.On) when (state.triggerMode) {
+                        TriggerMode.FLOATING_BUTTON -> R.string.home_hint_floating_button
+                        TriggerMode.NOTIFICATION -> R.string.home_hint_notification
+                    }
+                    else R.string.home_hint_off
+                ),
                 style = MaterialTheme.typography.bodyMedium
             )
             if (readingStatus != ReadingStatus.NotReady) {
                 Spacer(Modifier.height(12.dp))
-                QuickSettingsStrip(state, viewModel::pickTranslationModel, viewModel::chooseLanguage)
+                QuickSettingsStrip(state, viewModel::pickTranslationModel, viewModel::chooseSpokenLanguage, viewModel::chooseLanguage)
             }
         }
-        state.confirmation?.let { message -> item { PaperSuccess(message, viewModel::dismissConfirmation) } }
+        state.confirmation?.let { message -> item { PaperSuccess(message.asString(), viewModel::dismissConfirmation) } }
         if (state.serviceError) item {
-            PaperError("Couldn't start reading. Try the reading control again.", viewModel::dismissServiceError)
+            PaperError(stringResource(R.string.home_service_error), viewModel::dismissServiceError)
         }
         if (readingStatus == ReadingStatus.NotReady) item {
             PaperSurface(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Get ready to read", style = MaterialTheme.typography.titleLarge)
-                    Text(when (state.readiness) {
-                        Readiness.NeedsModels -> "Download the parts that find the speech bubbles, read the Japanese and translate it."
-                        Readiness.NeedsPermission -> "Allow Yomu to display translations over your manga app."
-                        Readiness.NeedsBoth -> "Download the parts that find the speech bubbles, read the Japanese and translate it, then allow Yomu to display over other apps."
-                        Readiness.Ready -> "Finish the short setup, then turn reading on."
-                    })
-                    PaperButton("Finish setup", viewModel::openSetup)
+                    Text(stringResource(R.string.home_get_ready), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(when (state.readiness) {
+                        Readiness.NeedsModels -> R.string.home_ready_needs_models
+                        Readiness.NeedsPermission -> R.string.home_ready_needs_permission
+                        Readiness.NeedsBoth -> R.string.home_ready_needs_both
+                        Readiness.Ready -> R.string.home_ready_finish
+                    }))
+                    PaperButton(stringResource(R.string.home_finish_setup), viewModel::openSetup)
                 }
             }
         }
+        if (readingStatus != ReadingStatus.NotReady) item { TryTranslateSection(state.spoken, state.targetLanguage) }
         item {
-            Text("${state.pagesTranslatedToday} ${if (state.pagesTranslatedToday == 1) "page" else "pages"} translated today", style = MaterialTheme.typography.bodySmall)
+            Text(pluralStringResource(R.plurals.home_pages_today, state.pagesTranslatedToday, state.pagesTranslatedToday), style = MaterialTheme.typography.bodySmall)
         }
         if (state.historyLoading || state.historyError || state.hasRead) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Recent", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-                    if (state.translations.isNotEmpty()) TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = { confirmClear = true }) { Text("Clear") }
+                    Text(stringResource(R.string.home_recent), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    if (state.translations.isNotEmpty()) TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = { confirmClear = true }) { Text(stringResource(R.string.home_clear)) }
                 }
             }
             if (state.clearError) item {
-                PaperError("Couldn't clear Recent. Your translations are still saved.", viewModel::clearHistory)
+                PaperError(stringResource(R.string.home_clear_error), viewModel::clearHistory)
             }
             when {
-                state.historyLoading -> item { PaperLoading("Loading recent translations…") }
-                state.historyError -> item { PaperError("Couldn't load recent translations.", viewModel::loadRecentHistory) }
+                state.historyLoading -> item { PaperLoading(stringResource(R.string.home_history_loading)) }
+                state.historyError -> item { PaperError(stringResource(R.string.home_history_error), viewModel::loadRecentHistory) }
                 state.translations.isEmpty() -> item {
-                    PaperEmpty("Your next translation will appear here.", "Back to reading") {
+                    PaperEmpty(stringResource(R.string.home_history_empty), stringResource(R.string.home_back_to_reading)) {
                         scope.launch { scroll.animateScrollToItem(0) }
                     }
                 }
@@ -144,14 +152,14 @@ fun HomeScreen(
                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(translation.translatedText, maxLines = if (expanded) Int.MAX_VALUE else 3, style = MaterialTheme.typography.bodyMedium)
                                 val translatedAt = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(translation.createdAt))
-                                val language = TargetLanguage.fromCode(translation.targetLanguage)?.promptName
+                                val language = TargetLanguage.fromCode(translation.targetLanguage)?.let { stringResource(it.labelRes()) }
                                 Text(listOfNotNull(translatedAt, language).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
-                                Text(if (expanded) "Show less" else "Read translation", style = MaterialTheme.typography.labelMedium)
+                                Text(stringResource(if (expanded) R.string.home_show_less else R.string.home_read_translation), style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
                     if (state.translations.size > 3) item {
-                        PaperButton(if (showAll) "Show recent only" else "Show all translations", { showAll = !showAll })
+                        PaperButton(stringResource(if (showAll) R.string.home_show_recent_only else R.string.home_show_all), { showAll = !showAll })
                     }
                 }
             }

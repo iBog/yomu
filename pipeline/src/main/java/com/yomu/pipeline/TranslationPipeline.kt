@@ -5,6 +5,7 @@ import android.graphics.RectF
 import android.util.Log
 import com.yomu.core.GlossaryEntry
 import com.yomu.core.SourceLanguage
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.pipeline.bubble.BubbleDetector
 import com.yomu.pipeline.bubble.bubbleRenderBoxes
@@ -33,7 +34,6 @@ class TranslationPipeline(
     /** Reads every source but Japanese; without it only Japanese pages can be read. */
     private val lineOcrEngine: LineOcrEngine? = null
 ) {
-
     companion object {
         private const val TAG = "TranslationPipeline"
     }
@@ -61,8 +61,7 @@ class TranslationPipeline(
     @Volatile var confidenceThreshold: Float = BubbleDetector.DEFAULT_CONFIDENCE_THRESHOLD
 
     /** Capture-to-typeset time of the most recent finished page, for the in-app resource readout (#422); null before any. */
-    @Volatile
-    var lastPageTotalMs: Long? = null
+    @Volatile var lastPageTotalMs: Long? = null
         private set
 
     fun getCurrentStage(): Stage = currentStage
@@ -86,7 +85,7 @@ class TranslationPipeline(
     /**
      * Serializes page processing with model unloading and emits OCR previews followed by typeset bubbles.
      * A bubble centered in one of [ignoredRegions], such as the status bar, is never read.
-     * The page is read as [sourceLanguage] and translated into [targetLanguage], with [glossary] applied to its source text.
+     * The page is read as [sourceLanguage]; [spokenLanguage] names the source in the prompt, null names none. It is translated into [targetLanguage], with [glossary] applied to its source text.
      * Callbacks run in the processing coroutine; UI callers must dispatch to the main thread.
      * Returns null on processing failure and propagates cancellation.
      */
@@ -98,10 +97,15 @@ class TranslationPipeline(
         ignoredRegions: List<RectF> = emptyList(),
         targetLanguage: TargetLanguage,
         glossary: List<GlossaryEntry> = emptyList(),
-        sourceLanguage: SourceLanguage = SourceLanguage.JAPANESE
+        sourceLanguage: SourceLanguage = SourceLanguage.JAPANESE,
+        spokenLanguage: SpokenLanguage? = SpokenLanguage.ofScript(sourceLanguage)
     ): PipelineResult? = inference.withLock {
-        runPage(bitmap, callback, onOcrComplete, onBubble, ignoredRegions, PageLanguages(sourceLanguage, targetLanguage), glossary)
+        runPage(bitmap, callback, onOcrComplete, onBubble, ignoredRegions, PageLanguages(sourceLanguage, targetLanguage, spokenLanguage), glossary)
     }
+
+    /** Translates pasted [lines] with the model in use, under the lock a page run holds. */
+    suspend fun translateLines(lines: List<String>, target: TargetLanguage, spoken: SpokenLanguage?, glossary: List<GlossaryEntry>) =
+        inference.withLock { translationEngine.translateLines(lines, target, spoken, glossary) }
 
     /** Releases the detector after any active page finishes using its native session. */
     suspend fun unloadDetection() = inference.withLock { bubbleDetector.release() }
@@ -245,7 +249,7 @@ class TranslationPipeline(
             // the art under it (#330).
             val arrived = mutableMapOf<Int, TypesetBubble>()
             var firstBubbleAt: Long? = null
-            val translationResult = translationEngine.translate(pageContext.blocks, languages.target, glossary, source) { translated ->
+            val translationResult = translationEngine.translate(pageContext.blocks, languages.target, glossary, source, languages.spoken) { translated ->
                 val typeset = typesetter.typeset(listOf(translated), bubbleBounds).single()
                 if (firstBubbleAt == null) firstBubbleAt = System.currentTimeMillis()
                 arrived[typeset.bubbleId] = typeset
@@ -258,7 +262,6 @@ class TranslationPipeline(
             callback?.onStageProgress(Stage.TRANSLATION, 1.0f)
 
             currentStage = Stage.DONE
-
             val result = PipelineResult(
                 typesetBubbles = typesetBubbles,
                 translationResult = translationResult,
@@ -275,7 +278,6 @@ class TranslationPipeline(
             lastPageTotalMs = result.totalTimeMs
             callback?.onComplete(result)
             return result
-
         } catch (e: CancellationException) {
             // A reader cancel (#76), not a failure: no error callback, no "Translation failed".
             throw e
@@ -286,9 +288,7 @@ class TranslationPipeline(
         }
     }
 
-    fun release() {
-        translationEngine.endSession()
-    }
+    fun release() = translationEngine.endSession()
 
     fun close() {
         bubbleDetector.release()

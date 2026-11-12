@@ -53,6 +53,9 @@ class ReadingModelSelection @Inject constructor(private val sharedPreferences: S
             Constants.PPOCR_CYRILLIC_MODEL_ID to SourceLanguage.CYRILLIC_SCRIPT
         )
 
+        /** The OCR model that reads [script]. */
+        fun ocrModelFor(script: SourceLanguage): String = OCR_SOURCES.entries.first { it.value == script }.key
+
         /** The source [ocrModelId] reads; Japanese for manga-ocr and any id it does not know. */
         fun sourceOf(ocrModelId: String): SourceLanguage = OCR_SOURCES[ocrModelId] ?: SourceLanguage.JAPANESE
     }

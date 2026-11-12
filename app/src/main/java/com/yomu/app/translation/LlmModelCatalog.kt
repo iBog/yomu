@@ -1,6 +1,8 @@
 package com.yomu.app.translation
 
 import android.content.SharedPreferences
+import androidx.annotation.StringRes
+import com.yomu.app.R
 import com.yomu.core.Constants
 import com.yomu.core.GenerationParams
 import com.yomu.core.ModelProfile
@@ -79,7 +81,11 @@ data class LlmModelOption(
 }
 
 /** The speed label a deliverable shows in the picker (ADR-0017). */
-enum class DeliverableSpeed(val label: String) { FAST("Fast"), MEDIUM("Medium"), SLOW("Slow") }
+enum class DeliverableSpeed(@StringRes val labelRes: Int) {
+    FAST(R.string.settings_speed_fast),
+    MEDIUM(R.string.settings_speed_medium),
+    SLOW(R.string.settings_speed_slow)
+}
 
 /** The RAM a translation model must fit inside on this device: [percent] of [totalMemBytes], at [contextTokens]. */
 data class FitBudget(val totalMemBytes: Long, val percent: Int, val contextTokens: Int)

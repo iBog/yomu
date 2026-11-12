@@ -1,5 +1,6 @@
 package com.yomu.app.service
 
+import com.yomu.app.R
 import com.yomu.app.db.entities.ModelEntity
 import com.yomu.app.db.entities.ModelStatus
 import com.yomu.app.db.entities.ModelType
@@ -7,6 +8,7 @@ import com.yomu.app.translation.LlmModelCatalog
 import com.yomu.app.translation.MapSharedPreferences
 import com.yomu.app.translation.TargetLanguageStore
 import com.yomu.app.translation.TranslationModelSelection
+import com.yomu.app.ui.UiText
 import com.yomu.core.Constants
 import com.yomu.core.TargetLanguage
 import com.yomu.ml.LlamaTranslationBridge
@@ -181,7 +183,7 @@ class LanguageSwitchTest {
         val qwenEntry = SlotDeliverable(qwen, "Qwen2.5 1.5B Instruct", 1L, "Apache-2.0", multilingual = true)
         val ocrEntry = SlotDeliverable("ocr", "manga-ocr", 1L, "Apache-2.0")
 
-        assertEquals("Can't write Spanish", ModelSlotSelection.languageBlock(catEntry, TargetLanguage.SPANISH))
+        assertEquals(UiText(R.string.language_block, UiText(R.string.language_es)), ModelSlotSelection.languageBlock(catEntry, TargetLanguage.SPANISH))
         assertNull(ModelSlotSelection.languageBlock(catEntry, TargetLanguage.ENGLISH))
         assertNull(ModelSlotSelection.languageBlock(qwenEntry, TargetLanguage.SPANISH))
         assertNull(ModelSlotSelection.languageBlock(ocrEntry, TargetLanguage.SPANISH))
@@ -195,11 +197,11 @@ class LanguageSwitchTest {
         val allFit = { _: SlotDeliverable -> true }
 
         assertEquals(
-            "No Multilingual model fits this device",
+            ModelSlotSelection.NO_MULTILINGUAL_FIT,
             ModelSlotSelection.languageUnavailable(TargetLanguage.FRENCH, listOf(catEntry, qwenEntry), noneFit)
         )
         assertEquals(
-            "No Multilingual model fits this device",
+            ModelSlotSelection.NO_MULTILINGUAL_FIT,
             ModelSlotSelection.languageUnavailable(TargetLanguage.FRENCH, listOf(catEntry), allFit)
         )
         assertNull(ModelSlotSelection.languageUnavailable(TargetLanguage.ENGLISH, listOf(catEntry), noneFit))

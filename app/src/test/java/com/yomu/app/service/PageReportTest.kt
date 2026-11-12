@@ -31,6 +31,7 @@ class PageReportTest {
         detectionThreshold = 0.25f,
         fontScale = 1.2f,
         targetLanguage = TargetLanguage.SPANISH,
+        spoken = null,
         glossary = emptyList()
     )
 

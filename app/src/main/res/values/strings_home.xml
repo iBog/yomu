@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home -->
+    <string name="home_title">Home</string>
+    <string name="home_reading_on">Reading is ON</string>
+    <string name="home_reading_off">Reading is OFF</string>
+    <string name="home_finish_setup_to_read">Finish setup to read</string>
+    <string name="home_tap_to_turn_off">Tap to turn off</string>
+    <string name="home_tap_to_turn_on">Tap to turn on</string>
+    <string name="home_needs_things_first">Yomu needs a few things first</string>
+    <string name="home_hint_floating_button">Keep reading in your manga app. Tap the floating button to translate a page.</string>
+    <string name="home_hint_notification">Keep reading in your manga app. Pull down the shade and tap Yomu\'s notification to translate a page.</string>
+    <string name="home_hint_off">Turn reading on, then browse manga in the app you already use.</string>
+    <string name="home_reading_is_on">Reading is on</string>
+    <string name="home_service_error">Couldn\'t start reading. Try the reading control again.</string>
+    <string name="home_get_ready">Get ready to read</string>
+    <string name="home_ready_needs_models">Download the parts that find the speech bubbles, read the Japanese and translate it.</string>
+    <string name="home_ready_needs_permission">Allow Yomu to display translations over your manga app.</string>
+    <string name="home_ready_needs_both">Download the parts that find the speech bubbles, read the Japanese and translate it, then allow Yomu to display over other apps.</string>
+    <string name="home_ready_finish">Finish the short setup, then turn reading on.</string>
+    <string name="home_finish_setup">Finish setup</string>
+    <plurals name="home_pages_today">
+        <item quantity="one">%1$d page translated today</item>
+        <item quantity="other">%1$d pages translated today</item>
+    </plurals>
+
+    <!-- Recent translations -->
+    <string name="home_recent">Recent</string>
+    <string name="home_clear">Clear</string>
+    <string name="home_keep">Keep</string>
+    <string name="home_clear_title">Clear recent translations?</string>
+    <string name="home_clear_message">This removes your saved translations from this device.</string>
+    <string name="home_recent_cleared">Recent translations cleared</string>
+    <string name="home_clear_error">Couldn\'t clear Recent. Your translations are still saved.</string>
+    <string name="home_history_loading">Loading recent translations…</string>
+    <string name="home_history_error">Couldn\'t load recent translations.</string>
+    <string name="home_history_empty">Your next translation will appear here.</string>
+    <string name="home_back_to_reading">Back to reading</string>
+    <string name="home_show_less">Show less</string>
+    <string name="home_read_translation">Read translation</string>
+    <string name="home_show_recent_only">Show recent only</string>
+    <string name="home_show_all">Show all translations</string>
+
+    <!-- Quick settings -->
+    <string name="home_verbatim">%1$s</string>
+    <string name="home_chip_from">From: %1$s</string>
+    <string name="home_chip_to">To: %1$s</string>
+    <string name="home_chip_no_model">No model selected</string>
+    <string name="home_chip_pending">%1$s · %2$s when downloaded</string>
+    <string name="home_needs_more_memory">Needs more memory</string>
+    <string name="home_selected">Selected</string>
+    <string name="home_download_detection">Finding speech bubbles</string>
+    <string name="home_download_ocr">Reading text</string>
+    <string name="home_download_translation">Translating into English</string>
+
+    <!-- Try it -->
+    <string name="try_title">Translation test</string>
+    <string name="try_input_label">Text to translate</string>
+    <string name="try_translate">Translate</string>
+    <string name="try_translating">Translating…</string>
+    <string name="try_seconds">%1$.1f s</string>
+    <string name="try_no_usable_translation">The model gave no usable translation</string>
+    <string name="try_translation_failed">Translation failed: %1$s</string>
+
+    <!-- Navigation, shared states, toasts -->
+    <string name="nav_home">Home</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_getting_ready">Getting Yomu ready…</string>
+    <string name="paper_loading">Loading…</string>
+    <string name="paper_error">Error</string>
+    <string name="paper_success">Success</string>
+    <string name="paper_try_again">Try again</string>
+    <string name="main_allow_overlay">Allow display over other apps, then enable Yomu again</string>
+</resources>

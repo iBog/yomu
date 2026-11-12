@@ -4,6 +4,7 @@ import com.yomu.core.ERROR_ENGLISH_ONLY
 import com.yomu.core.ERROR_MODEL_MISSING
 import com.yomu.core.GlossaryEntry
 import com.yomu.core.SourceLanguage
+import com.yomu.core.SpokenLanguage
 import com.yomu.core.TargetLanguage
 import com.yomu.core.TranslatableBubble
 import com.yomu.core.TranslatablePage
@@ -12,6 +13,7 @@ import com.yomu.core.TranslationSlot
 import com.yomu.core.applyTo
 import com.yomu.core.hasHanOrKana
 import com.yomu.pipeline.context.ConversationBlock
+import com.yomu.pipeline.ocr.OcrResult
 
 private val NON_TRANSLATION_PATTERNS = listOf(
     Regex("""(?i)^\s*(?:sure[!,.]?\s*)?(?:here(?:['’]s| is| are)\s+(?:the |an? )?(?:english )?translations?\b|(?:english )?translation\s*:)"""),
@@ -76,23 +78,31 @@ data class TranslationResult(
     val targetLanguage: TargetLanguage = TargetLanguage.ENGLISH
 )
 
-/**
- * What to tell the reader when the page came back untranslated because the slot could not load or
- * its English-only model refused the target language, or null when the model ran. Such a page still
- * renders every bubble's source text, which reads as a capture that silently did nothing (#308) —
- * the caller shows this instead.
- */
-fun TranslationResult.readerFailure(): String? = when {
-    errorCode == ERROR_ENGLISH_ONLY -> "This model is English only — pick a Multilingual model or English in Settings"
-    outcome != TranslationOutcome.NOT_LOADED -> null
-    errorCode == ERROR_MODEL_MISSING -> "Translation model is missing — download it again in Settings"
-    else -> "Translation model could not be loaded (${errorCode ?: "not_ready"})"
+/** Why a page came back untranslated, for the caller to word in the reader's language. */
+sealed interface ReaderFailure {
+    /** The model in use writes English only and was asked for another language. */
+    data object EnglishOnly : ReaderFailure
+    data object ModelMissing : ReaderFailure
+    data class NotLoaded(val code: String) : ReaderFailure
 }
 
-fun TranslationResult.untranslatedNotice(): String? {
-    val unanswered = translations.count { !it.answered }
-    return if (unanswered == 0) null else "$unanswered of ${translations.size} bubbles not translated"
+/** How many bubbles of a page the model left unanswered. */
+data class UntranslatedNotice(val missing: Int, val total: Int)
+
+/**
+ * Why the page came back untranslated because the slot could not load or its English-only model
+ * refused the target language, or null when the model ran. Such a page still renders every bubble's
+ * source text, which reads as a capture that silently did nothing (#308) — the caller shows this instead.
+ */
+fun TranslationResult.readerFailure(): ReaderFailure? = when {
+    errorCode == ERROR_ENGLISH_ONLY -> ReaderFailure.EnglishOnly
+    outcome != TranslationOutcome.NOT_LOADED -> null
+    errorCode == ERROR_MODEL_MISSING -> ReaderFailure.ModelMissing
+    else -> ReaderFailure.NotLoaded(errorCode ?: "not_ready")
 }
+
+fun TranslationResult.untranslatedNotice(): UntranslatedNotice? =
+    translations.count { !it.answered }.takeIf { it > 0 }?.let { UntranslatedNotice(it, translations.size) }
 
 class TranslationEngine(
     private val slotProvider: () -> TranslationSlot,
@@ -119,10 +129,11 @@ class TranslationEngine(
         targetLanguage: TargetLanguage = TargetLanguage.ENGLISH,
         glossary: List<GlossaryEntry> = emptyList(),
         sourceLanguage: SourceLanguage = SourceLanguage.JAPANESE,
+        spokenLanguage: SpokenLanguage? = SpokenLanguage.ofScript(sourceLanguage),
         onBubble: (TranslatedBubble) -> Unit = {}
     ): TranslationResult {
         val ocrById = blocks.flatMap { it.textByBubbleId.entries }.associate { (id, read) -> id to read.text.take(MAX_SOURCE_CHARS) }
-        val page = project(ocrById, blocks, targetLanguage, glossary, sourceLanguage)
+        val page = project(ocrById, blocks, targetLanguage, glossary, sourceLanguage, spokenLanguage)
         val bubbles = page.panels.flatten()
         if (bubbles.isEmpty()) return TranslationResult(emptyList(), "", 0L, targetLanguage = targetLanguage)
 
@@ -152,13 +163,26 @@ class TranslationEngine(
         )
     }
 
+    /** Translates pasted [lines] as one panel, so a model can be tried without a captured page; blank lines are skipped. */
+    suspend fun translateLines(
+        lines: List<String>,
+        targetLanguage: TargetLanguage,
+        spokenLanguage: SpokenLanguage?,
+        glossary: List<GlossaryEntry>
+    ): TranslationResult {
+        val reads = lines.filter { it.isNotBlank() }.map { OcrResult(it.trim(), 1f, FloatArray(4)) }
+        val block = ConversationBlock(0, emptyList(), emptyList(), reads.indices.toList(), reads.withIndex().associate { it.index to it.value })
+        return translate(listOf(block), targetLanguage, glossary, spokenLanguage?.script ?: SourceLanguage.JAPANESE, spokenLanguage)
+    }
+
     /** Every prompt shape reads the page from here, so the glossary is applied once and no template changes. */
     private fun project(
         ocrById: Map<Int, String>,
         blocks: List<ConversationBlock>,
         targetLanguage: TargetLanguage,
         glossary: List<GlossaryEntry>,
-        sourceLanguage: SourceLanguage
+        sourceLanguage: SourceLanguage,
+        spokenLanguage: SpokenLanguage?
     ): TranslatablePage = TranslatablePage(
         blocks.map { block ->
             block.readingOrder.mapNotNull { bubbleId ->
@@ -168,7 +192,8 @@ class TranslationEngine(
             }
         }.filter { it.isNotEmpty() },
         targetLanguage,
-        sourceLanguage
+        sourceLanguage,
+        spokenLanguage
     )
 
     fun endSession() {

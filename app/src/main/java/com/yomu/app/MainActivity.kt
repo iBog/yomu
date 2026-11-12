@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import com.yomu.core.Constants
 import com.yomu.core.TargetLanguage
 import com.yomu.app.ui.theme.*
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.media.projection.MediaProjectionManager
@@ -27,6 +28,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var sharedPreferences: SharedPreferences
 
+    override fun attachBaseContext(base: Context) = super.attachBaseContext(base.withAppLanguage())
+
     /** A language the overlay's switch asked for, waiting for Home to offer the model it needs (#338). */
     private var languageRequest by mutableStateOf<TargetLanguage?>(null)
 
@@ -43,7 +46,7 @@ class MainActivity : ComponentActivity() {
         if (!Settings.canDrawOverlays(this)) {
             Toast.makeText(
                 this,
-                "Allow display over other apps, then enable Yomu again",
+                getString(R.string.main_allow_overlay),
                 Toast.LENGTH_SHORT
             ).show()
             val overlayIntent = Intent(
@@ -65,7 +68,7 @@ class MainActivity : ComponentActivity() {
         if (!Settings.canDrawOverlays(this)) {
             Toast.makeText(
                 this,
-                "Allow display over other apps, then enable Yomu again",
+                getString(R.string.main_allow_overlay),
                 Toast.LENGTH_SHORT
             ).show()
             val overlayIntent = Intent(

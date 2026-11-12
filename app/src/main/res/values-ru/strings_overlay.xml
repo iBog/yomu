@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="overlay_card_japanese">Японский</string>
+    <string name="overlay_card_english">Английский</string>
+    <string name="overlay_card_copy">Копировать</string>
+    <string name="overlay_card_copy_description">Копировать: %1$s</string>
+    <string name="overlay_card_copied">Скопировано</string>
+
+    <string name="overlay_button_translate_description">Перевести экран. Удерживайте для быстрых настроек.</string>
+    <string name="overlay_button_stop_description">Остановить перевод</string>
+
+    <string name="overlay_language_chip">%1$s → %2$s</string>
+
+    <string name="overlay_stage_bubble_detection">Поиск облачков с текстом</string>
+    <string name="overlay_stage_ocr">Чтение текста</string>
+    <string name="overlay_stage_context">Подготовка контекста</string>
+    <string name="overlay_stage_translation">Перевод</string>
+    <string name="overlay_stage_done">Отрисовка перевода</string>
+    <string name="overlay_stage_error">Ошибка</string>
+
+    <string name="overlay_quick_settings">Быстрые настройки</string>
+    <string name="overlay_quick_settings_close">Закрыть быстрые настройки</string>
+    <string name="overlay_font_size">Размер шрифта</string>
+    <string name="overlay_font_size_description">Размер шрифта перевода</string>
+    <string name="overlay_threshold_description">Порог облачков</string>
+    <string name="overlay_threshold">Порог облачков · %1$.2f</string>
+    <string name="overlay_report_last_page">Отчёт о последней странице</string>
+    <string name="overlay_open_yomu">Открыть Yomu</string>
+    <string name="overlay_stop_service">Остановить службу</string>
+    <string name="overlay_reset">Сбросить</string>
+</resources>

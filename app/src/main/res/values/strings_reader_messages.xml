@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_failure_english_only">This model is English only — pick a Multilingual model or English in Settings</string>
+    <string name="reader_failure_model_missing">Translation model is missing — download it again in Settings</string>
+    <string name="reader_failure_not_loaded">Translation model could not be loaded (%1$s)</string>
+    <string name="reader_untranslated_notice">%1$d of %2$d bubbles not translated</string>
+</resources>

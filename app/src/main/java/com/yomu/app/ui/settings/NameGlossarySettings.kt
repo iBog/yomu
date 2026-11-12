@@ -5,7 +5,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.yomu.app.R
 import com.yomu.app.ui.theme.PaperButton
 import com.yomu.app.ui.theme.PaperSurface
 import com.yomu.core.GlossaryEntry
@@ -15,13 +17,13 @@ fun NameGlossarySettings(viewModel: NameGlossaryViewModel, onBack: () -> Unit) {
     val entries by viewModel.entries.collectAsState()
     // The entry being edited; a blank term opens the dialog for a new one.
     var editing by remember { mutableStateOf<GlossaryEntry?>(null) }
-    SettingsPage(SettingsSection.NameGlossary.title, SettingsSection.NameGlossary.description, onBack) {
-        PaperButton("Add name", { editing = GlossaryEntry("", "") })
+    SettingsPage(stringResource(SettingsSection.NameGlossary.title), stringResource(SettingsSection.NameGlossary.description), onBack) {
+        PaperButton(stringResource(R.string.settings_glossary_add), { editing = GlossaryEntry("", "") })
         PaperSurface(Modifier.fillMaxWidth()) {
             Column {
                 if (entries.isEmpty()) {
                     Text(
-                        "No names yet. Copy the Japanese from a bubble card, then add it here with the name you want.",
+                        stringResource(R.string.settings_glossary_empty),
                         Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -57,20 +59,20 @@ private fun GlossaryEntryDialog(entry: GlossaryEntry, onSave: (String, String) -
     var rendering by remember { mutableStateOf(entry.rendering) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (onDelete == null) "Add name" else "Edit name") },
+        title = { Text(stringResource(if (onDelete == null) R.string.settings_glossary_add else R.string.settings_glossary_edit)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(term, { term = it }, label = { Text("Japanese") }, singleLine = true)
-                OutlinedTextField(rendering, { rendering = it }, label = { Text("Always translate as") }, singleLine = true)
+                OutlinedTextField(term, { term = it }, label = { Text(stringResource(R.string.settings_glossary_japanese)) }, singleLine = true)
+                OutlinedTextField(rendering, { rendering = it }, label = { Text(stringResource(R.string.settings_glossary_rendering)) }, singleLine = true)
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(term, rendering) }, enabled = term.isNotBlank() && rendering.isNotBlank()) { Text("Save") }
+            TextButton(onClick = { onSave(term, rendering) }, enabled = term.isNotBlank() && rendering.isNotBlank()) { Text(stringResource(R.string.settings_glossary_save)) }
         },
         dismissButton = {
             Row {
-                onDelete?.let { TextButton(onClick = it) { Text("Delete") } }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                onDelete?.let { TextButton(onClick = it) { Text(stringResource(R.string.settings_delete)) } }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_cancel)) }
             }
         }
     )

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="service_failed">Ошибка: %1$s</string>
+    <string name="service_already_translated">Уже переведено</string>
+    <string name="service_capturing_screen">Снимок экрана</string>
+    <string name="service_error_download_model">Скачайте модель в настройках</string>
+    <string name="service_error_no_projection">Нет активной записи экрана</string>
+    <string name="service_error_no_frame">Не удалось получить кадр экрана</string>
+    <string name="service_report_failed">Не удалось создать отчёт о странице</string>
+    <string name="service_report_chooser_title">Отчёт о последней странице</string>
+    <string name="service_no_model_selected">Модель не выбрана</string>
+</resources>

@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.yomu.app.R
 import com.yomu.app.ui.theme.paperBackground
 import com.yomu.app.ui.theme.paperColors
 import com.yomu.pipeline.typesetting.TypesetBubble
@@ -25,8 +26,8 @@ internal fun bubbleCard(context: Context, bubble: TypesetBubble, atTop: Boolean)
         setPadding(margin, margin / 2, margin, margin)
         addView(LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            addCardSection(context, "Japanese", bubble.originalText, 18f)
-            addCardSection(context, "English", bubble.translatedText, 16f)
+            addCardSection(context, context.getString(R.string.overlay_card_japanese), bubble.originalText, 18f)
+            addCardSection(context, context.getString(R.string.overlay_card_english), bubble.translatedText, 16f)
         })
         layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
@@ -49,8 +50,8 @@ private fun LinearLayout.addCardSection(context: Context, label: String, text: S
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
         addView(Button(context).apply {
-            this.text = "Copy"
-            contentDescription = "Copy $label"
+            this.text = context.getString(R.string.overlay_card_copy)
+            contentDescription = context.getString(R.string.overlay_card_copy_description, label)
             this.textSize = 14f
             isAllCaps = false
             minHeight = (48 * density).toInt()
@@ -71,6 +72,6 @@ private fun copyToClipboard(context: Context, label: String, text: String) {
     context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText(label, text))
     // Android 13 and later confirm a copy themselves.
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-        Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, R.string.overlay_card_copied, Toast.LENGTH_SHORT).show()
     }
 }

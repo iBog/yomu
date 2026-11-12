@@ -1,5 +1,6 @@
 package com.yomu.app.ui.settings
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,10 +12,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.yomu.app.R
 import com.yomu.app.db.entities.ModelStatus
 import com.yomu.app.service.LanguageSwitch
 import com.yomu.app.service.SlotDeliverable
+import com.yomu.app.ui.UiText
+import com.yomu.app.ui.labelRes
 import com.yomu.app.ui.theme.*
 import com.yomu.core.TargetLanguage
 import com.yomu.core.toFileSizeString
@@ -31,7 +37,7 @@ internal fun SlotPicker(
     downloads: Map<String, Int>,
     fits: (SlotDeliverable) -> Boolean,
     needsSlowWarning: (SlotDeliverable) -> Boolean,
-    languageBlock: (SlotDeliverable) -> String?,
+    languageBlock: (SlotDeliverable) -> UiText?,
     onPick: (String) -> Unit,
     onCancel: (String) -> Unit,
     onDelete: (String) -> Unit
@@ -46,9 +52,9 @@ internal fun SlotPicker(
                 Surface(onClick = { open = true }, color = Color.Transparent, shape = MaterialTheme.shapes.medium) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(deliverables.firstOrNull { it.id == selectedId }?.name ?: "No model selected", style = MaterialTheme.typography.titleSmall)
+                            Text(deliverables.firstOrNull { it.id == selectedId }?.name ?: stringResource(R.string.settings_no_model_selected), style = MaterialTheme.typography.titleSmall)
                             deliverables.firstOrNull { it.id == pendingId }?.let {
-                                Text("Switches to ${it.name} when its download finishes", style = MaterialTheme.typography.bodySmall, color = muted)
+                                Text(stringResource(R.string.settings_switches_when_downloaded, it.name), style = MaterialTheme.typography.bodySmall, color = muted)
                             }
                         }
                         Icon(Icons.Default.KeyboardArrowRight, contentDescription = null)
@@ -82,15 +88,15 @@ internal fun SlotPicker(
     confirmDelete?.let { id ->
         AlertDialog(
             onDismissRequest = { confirmDelete = null },
-            title = { Text("Delete the model in use?") },
-            text = { Text("Yomu can't translate or read until you pick and download a model.") },
+            title = { Text(stringResource(R.string.settings_delete_in_use_title)) },
+            text = { Text(stringResource(R.string.settings_delete_in_use_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = null
                     onDelete(id)
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.settings_delete)) }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text("Keep") } }
+            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text(stringResource(R.string.settings_keep)) } }
         )
     }
     confirmSlow?.let { id ->
@@ -109,41 +115,43 @@ internal fun SlotPicker(
 internal fun SlowDeliverableDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("This model is slow") },
-        text = { Text("It is a large model and takes longer to translate each page. Pick it anyway?") },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Pick it") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        title = { Text(stringResource(R.string.settings_slow_title)) },
+        text = { Text(stringResource(R.string.settings_slow_text)) },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.settings_slow_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_cancel)) } }
     )
 }
 
 /** Every surface that chooses a language asks the same thing when the model in use writes English only (#338). */
 @Composable
 internal fun LanguageOfferDialog(offer: LanguageSwitch.Offer, keep: TargetLanguage, onAccept: () -> Unit, onDecline: () -> Unit) {
-    val download = if (offer.downloadBytes > 0) " It downloads ${offer.downloadBytes.toFileSizeString()} first." else ""
+    val language = stringResource(offer.language.labelRes())
+    val text = stringResource(R.string.settings_offer_text, offer.current.name, offer.model.name, language)
+    val download = if (offer.downloadBytes > 0) " " + stringResource(R.string.settings_offer_download, offer.downloadBytes.toFileSizeString()) else ""
     AlertDialog(
         onDismissRequest = onDecline,
-        title = { Text("Switch to ${offer.model.name}?") },
-        text = { Text("${offer.current.name} writes English only. ${offer.model.name} can translate into ${offer.language.promptName}.$download") },
-        confirmButton = { TextButton(onClick = onAccept) { Text("Switch") } },
-        dismissButton = { TextButton(onClick = onDecline) { Text("Keep ${keep.promptName}") } }
+        title = { Text(stringResource(R.string.settings_offer_title, offer.model.name)) },
+        text = { Text(text + download) },
+        confirmButton = { TextButton(onClick = onAccept) { Text(stringResource(R.string.settings_offer_switch)) } },
+        dismissButton = { TextButton(onClick = onDecline) { Text(stringResource(R.string.settings_offer_keep, stringResource(keep.labelRes()))) } }
     )
 }
 
-internal fun deliverableStatus(status: ModelStatus?, progress: Int?, selected: Boolean, pending: Boolean): String = when {
-    progress != null -> "Downloading $progress%"
-    status == ModelStatus.READY -> if (selected) "In use" else "Downloaded"
-    status == ModelStatus.ERROR -> "Couldn't download"
-    else -> "Not downloaded"
-} + if (pending) " · Takes over when downloaded" else ""
+internal fun deliverableStatus(context: Context, status: ModelStatus?, progress: Int?, selected: Boolean, pending: Boolean): String = when {
+    progress != null -> context.getString(R.string.settings_status_downloading, progress)
+    status == ModelStatus.READY -> context.getString(if (selected) R.string.settings_status_in_use else R.string.settings_status_downloaded)
+    status == ModelStatus.ERROR -> context.getString(R.string.settings_status_error)
+    else -> context.getString(R.string.settings_status_not_downloaded)
+} + if (pending) " · " + context.getString(R.string.settings_status_takes_over) else ""
 
-internal fun deliverableDetail(deliverable: SlotDeliverable, fits: Boolean, languageBlock: String? = null): String = listOfNotNull(
+internal fun deliverableDetail(context: Context, deliverable: SlotDeliverable, fits: Boolean, languageBlock: UiText? = null): String = listOfNotNull(
     deliverable.sizeBytes.toFileSizeString(),
-    deliverable.speed.label,
-    deliverable.languageLabel,
+    context.getString(deliverable.speed.labelRes),
+    deliverable.languageLabelRes?.let(context::getString),
     deliverable.licence,
-    "Experimental".takeIf { deliverable.experimental },
-    if (fits) "Fits this device" else "Needs more memory",
-    languageBlock
+    context.getString(R.string.settings_experimental).takeIf { deliverable.experimental },
+    context.getString(if (fits) R.string.settings_fits_device else R.string.settings_needs_memory),
+    languageBlock?.resolve(context)
 ).joinToString(" · ")
 
 @Composable
@@ -154,20 +162,21 @@ private fun DeliverableRow(
     status: ModelStatus?,
     progress: Int?,
     fits: Boolean,
-    languageBlock: String?,
+    languageBlock: UiText?,
     onPick: () -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit
 ) {
     val pickable = fits && languageBlock == null
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    val statusLabel = deliverableStatus(status, progress, selected, pending)
+    val context = LocalContext.current
+    val statusLabel = deliverableStatus(context, status, progress, selected, pending)
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(selected = selected, onClick = onPick, enabled = pickable)
             Column(Modifier.weight(1f)) {
                 Text(deliverable.name, style = MaterialTheme.typography.titleSmall, color = if (pickable) LocalContentColor.current else muted)
-                Text(deliverableDetail(deliverable, fits, languageBlock), style = MaterialTheme.typography.bodySmall, color = muted)
+                Text(deliverableDetail(context, deliverable, fits, languageBlock), style = MaterialTheme.typography.bodySmall, color = muted)
                 Text(
                     statusLabel,
                     style = MaterialTheme.typography.bodySmall,
@@ -175,9 +184,9 @@ private fun DeliverableRow(
                 )
             }
             when {
-                progress != null -> PaperButton("Cancel", onCancel)
-                status == ModelStatus.READY -> PaperButton("Delete", onDelete)
-                else -> PaperButton(if (status == ModelStatus.ERROR) "Retry" else "Download", onPick, enabled = pickable)
+                progress != null -> PaperButton(stringResource(R.string.settings_cancel), onCancel)
+                status == ModelStatus.READY -> PaperButton(stringResource(R.string.settings_delete), onDelete)
+                else -> PaperButton(stringResource(if (status == ModelStatus.ERROR) R.string.settings_retry else R.string.settings_download), onPick, enabled = pickable)
             }
         }
         progress?.let {
